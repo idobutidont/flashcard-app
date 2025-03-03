@@ -1,6 +1,11 @@
 import uuid
+import os
+import json
+
+# TODO: Proper Docstring
 
 
+# Flashcard (Middle Panel)
 class Flashcard:
     def __init__(self, front="", back="", notes="", id=None):
         """
@@ -34,6 +39,8 @@ class Flashcard:
             id=data.get("id")
         )
 
+
+# Deck (Left Panel)
 class Deck:
     def __init__(self, name, flashcards=None):
         """
@@ -80,3 +87,51 @@ class Deck:
         """
         flashcards = [Flashcard.from_dict(card_data) for card_data in data.get("flashcards", [])]
         return cls(name=data.get("name", ""), flashcards=flashcards)
+
+
+# Data Manager (stores json in txt)
+class DataManager:
+    def __init__(self, data_dir="data"):
+        """
+        
+        """
+        self.data_dir = data_dir
+        os.makedirs(self.data_dir, exist_ok=True)
+    
+    def save_deck(self, deck):
+        """
+        
+        """
+        deck_path = os.path.join(self.data_dir, f"{deck.name}.txt")
+        with open(deck_path, 'w') as f:
+            json.dump(deck.to_dict(), f, indent=2)
+    
+    def load_decks(self):
+        """
+        
+        """
+        decks = []
+        if not os.path.exists(self.data_dir):
+            return decks
+        
+        for filename in os.listdir(self.data_dir):
+            if filename.endswith(".txt"):
+                deck_path = os.path.join(self.data_dir, filename)
+                try:
+                    with open(deck_path, 'r') as f:
+                        deck_data = json.load(f)
+                        deck = Deck.from_dict(deck_data)
+                        decks.append(deck)
+                except (json.JSONDecodeError, KeyError):
+                    print(f"Error loading deck from {filename}")
+        return decks
+    
+    def delete_deck(self, deck_name):
+        """
+        
+        """
+        deck_path = os.path.join(self.data_dir, f"{deck_name}.txt")
+        if os.path.exists(deck_path):
+            os.remove(deck_path)
+            return True
+        return False
