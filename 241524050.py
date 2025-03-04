@@ -1,0 +1,169 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'mainwindow.ui'
+##
+## Created by: Qt User Interface Compiler version 6.8.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
+    QSizePolicy, QStatusBar, QTextEdit, QToolBar,
+    QVBoxLayout, QWidget)
+import resource_rc
+
+class Flashcard_Notes(object):
+    def setupUi(self, MainWindow):
+        if not MainWindow.objectName():
+            MainWindow.setObjectName(u"MainWindow")
+        MainWindow.resize(800, 600)
+        self.actionQuit = QAction(MainWindow)
+        self.actionQuit.setObjectName(u"actionQuit")
+        icon = QIcon()
+        icon.addFile(u":/newPrefix/images/quitIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionQuit.setIcon(icon)
+        self.actionCopy = QAction(MainWindow)
+        self.actionCopy.setObjectName(u"actionCopy")
+        icon1 = QIcon()
+        icon1.addFile(u":/newPrefix/images/copyIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionCopy.setIcon(icon1)
+        self.actionCut = QAction(MainWindow)
+        self.actionCut.setObjectName(u"actionCut")
+        icon2 = QIcon()
+        icon2.addFile(u":/newPrefix/images/cutIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionCut.setIcon(icon2)
+        self.actionPaste = QAction(MainWindow)
+        self.actionPaste.setObjectName(u"actionPaste")
+        icon3 = QIcon()
+        icon3.addFile(u":/newPrefix/images/pasteIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionPaste.setIcon(icon3)
+        self.actionUndo = QAction(MainWindow)
+        self.actionUndo.setObjectName(u"actionUndo")
+        icon4 = QIcon()
+        icon4.addFile(u":/newPrefix/images/undoIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionUndo.setIcon(icon4)
+        self.actionAbout = QAction(MainWindow)
+        self.actionAbout.setObjectName(u"actionAbout")
+        icon5 = QIcon()
+        icon5.addFile(u":/newPrefix/images/aboutIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionAbout.setIcon(icon5)
+        self.actionAboutQt = QAction(MainWindow)
+        self.actionAboutQt.setObjectName(u"actionAboutQt")
+        icon6 = QIcon()
+        icon6.addFile(u":/newPrefix/images/aboutQtIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionAboutQt.setIcon(icon6)
+        self.actionRedo = QAction(MainWindow)
+        self.actionRedo.setObjectName(u"actionRedo")
+        icon7 = QIcon()
+        icon7.addFile(u":/newPrefix/images/redoIcon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionRedo.setIcon(icon7)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QMenuBar(MainWindow)
+        self.menubar.setObjectName(u"menubar")
+        self.menubar.setGeometry(QRect(0, 0, 800, 21))
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName(u"menuFile")
+        self.menuEdit = QMenu(self.menubar)
+        self.menuEdit.setObjectName(u"menuEdit")
+        self.menuHelp = QMenu(self.menubar)
+        self.menuHelp.setObjectName(u"menuHelp")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setObjectName(u"statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.toolBar = QToolBar(MainWindow)
+        self.toolBar.setObjectName(u"toolBar")
+        MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolBar)
+
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
+        self.menubar.addAction(self.menuHelp.menuAction())
+        self.menuFile.addAction(self.actionQuit)
+        self.menuEdit.addAction(self.actionCopy)
+        self.menuEdit.addAction(self.actionCut)
+        self.menuEdit.addAction(self.actionPaste)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionUndo)
+        self.menuEdit.addAction(self.actionRedo)
+        self.menuHelp.addAction(self.actionAbout)
+        self.menuHelp.addAction(self.actionAboutQt)
+        self.toolBar.addAction(self.actionQuit)
+        self.toolBar.addAction(self.actionCopy)
+        self.toolBar.addAction(self.actionCut)
+        self.toolBar.addAction(self.actionPaste)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionUndo)
+        self.toolBar.addAction(self.actionRedo)
+
+        self.retranslateUi(MainWindow)
+
+        QMetaObject.connectSlotsByName(MainWindow)
+    # setupUi (IMPORTED FROM UI IN QT_DESIGNER)
+
+    def setupTextEdit(self):
+        self.textEdit = QTextEdit(self.centralwidget)
+        self.textEdit.setObjectName(u"textEdit")
+        self.verticalLayout.addWidget(self.textEdit)
+    #TextEditor
+
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"Quit", None))
+        self.actionCopy.setText(QCoreApplication.translate("MainWindow", u"Copy", None))
+        self.actionCut.setText(QCoreApplication.translate("MainWindow", u"Cut", None))
+        self.actionPaste.setText(QCoreApplication.translate("MainWindow", u"Paste", None))
+        self.actionUndo.setText(QCoreApplication.translate("MainWindow", u"Undo", None))
+        self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.actionAboutQt.setText(QCoreApplication.translate("MainWindow", u"AboutQt", None))
+        self.actionRedo.setText(QCoreApplication.translate("MainWindow", u"Redo", None))
+        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
+        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
+        self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
+        self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
+    # retranslateUi (IMPORTED FROM UI IN QT_DESIGNER)
+
+class MainWindow(QMainWindow, Flashcard_Notes):
+    def __init__(self,app):
+        super().__init__()
+        self.setupUi(self)
+        self.app = app
+
+        self.actionQuit.triggered.connect(self.quit)
+        self.actionCopy.triggered.connect(self.copy)
+        self.actionCut.triggered.connect(self.cut)
+        self.actionPaste.triggered.connect(self.paste)
+        self.actionUndo.triggered.connect(self.undo)
+        self.actionRedo.triggered.connect(self.redo)
+        self.actionAbout.triggered.connect(self.about)
+        self.actionAboutQt.triggered.connect(self.aboutQt)
+
+    def quit(self):
+        self.app.quit()
+    def copy(self):
+        self.textEdit.copy()
+    def cut(self):
+        self.textEdit.cut()
+    def paste(self):
+        self.textEdit.paste()
+    def undo(self):
+        self.textEdit.undo()
+    def redo(self):
+        self.textEdit.redo()
+    def about(self):
+        QMessageBox.information(self,"Going pro!","QMainWindow,Qt Designer and Resources : Going pro!")
+    def aboutQt(self):
+        QApplication.aboutQt()
