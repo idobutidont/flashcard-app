@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 class FlashcardApp(QMainWindow):
-    def __init__(self):  # Perbaikan di sini
-        super().__init__()  # Perbaikan di sini
+    def __init__(self):  
+        super().__init__() 
 
         self.setWindowTitle("Flashcard App Test")
         self.setGeometry(100, 100, 800, 500)
@@ -72,7 +72,7 @@ class FlashcardApp(QMainWindow):
         self.setCentralWidget(container)
 
 # === Menjalankan Aplikasi ===
-if __name__ == "__main__":  # Perbaikan di sini
+if __name__ == "__main__":  
     app = QApplication(sys.argv)
     window = FlashcardApp()
     window.show()
