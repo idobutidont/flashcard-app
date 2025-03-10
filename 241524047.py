@@ -7,7 +7,7 @@ import json
 
 # Flashcard (Middle Panel)
 class Flashcard:
-    def __init__(self, front="", back="", notes="", id=None):
+    def __init__(self, front="", back="", notes="", id=None, right_count=0, wrong_count=0):
         """
         Initialize a new flashcard.
         """
@@ -15,6 +15,8 @@ class Flashcard:
         self.back = back
         self.notes = notes
         self.id = id if id is not None else str(uuid.uuid4())
+        self.right_count = right_count
+        self.wrong_count = wrong_count
     
     def to_dict(self):
         """
@@ -24,7 +26,9 @@ class Flashcard:
             "id": self.id,
             "front": self.front,
             "back": self.back,
-            "notes": self.notes
+            "notes": self.notes,
+            "right_count": self.right_count,
+            "wrong_count": self.wrong_count
         }
     
     @classmethod
@@ -36,7 +40,9 @@ class Flashcard:
             front=data.get("front", ""),
             back=data.get("back", ""),
             notes=data.get("notes", ""),
-            id=data.get("id")
+            id=data.get("id"),
+            right_count=data.get("right_count", 0),
+            wrong_count=data.get("wrong_count", 0)
         )
 
 
