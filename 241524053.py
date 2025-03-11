@@ -1,74 +1,45 @@
-import uuid
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QPushButton, QWidget
+from PyQt6.QtCore import Qt
+from Virli_241524062 import Flashcard  # Import model Flashcard dari kode Virli
 
-class Flashcard:
-    def __init__(self, front, back, notes="", id=None, right_count=0, wrong_count=0):
-        """
-        Representasi satu flashcard dengan pertanyaan, jawaban, dan statistik.
-        """
-        self.front = front
-        self.back = back
-        self.notes = notes
-        self.id = id if id is not None else str(uuid.uuid4())
-        self.right_count = right_count
-        self.wrong_count = wrong_count
-    
-    def to_dict(self):
-        """Mengubah flashcard menjadi dictionary agar bisa disimpan dalam JSON."""
-        return {
-            "id": self.id,
-            "front": self.front,
-            "back": self.back,
-            "notes": self.notes,
-            "right_count": self.right_count,
-            "wrong_count": self.wrong_count
-        }
-    
-    @classmethod
-    def from_dict(cls, data):
-        """Membuat flashcard dari dictionary."""
-        return cls(
-            front=data.get("front", ""),
-            back=data.get("back", ""),
-            notes=data.get("notes", ""),
-            id=data.get("id"),
-            right_count=data.get("right_count", 0),
-            wrong_count=data.get("wrong_count", 0)
-        )
+class FlashcardViewer(QWidget):
+    def __init__(self):
+        super().__init__()
+        
+        self.current_card = None  # Kartu yang sedang ditampilkan
+        self.is_flipped = False   # Status apakah kartu sedang dalam posisi terbalik
 
+        # Label untuk menampilkan kartu
+        self.card_label = QLabel("No flashcard available.\nPlease select a deck.")
+        self.card_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.card_label.setStyleSheet("font-size: 16px; font-weight: bold; padding: 20px;")
 
-class Deck:
-    def __init__(self, name, flashcards=None):
-        """
-        Kumpulan flashcard dalam satu deck.
-        """
-        self.name = name
-        self.flashcards = flashcards if flashcards else []
+        # Tombol untuk membalik kartu
+        self.flip_button = QPushButton("Flip Card")
+        self.flip_button.clicked.connect(self.flip_card)
+
+        # Layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.card_label)
+        layout.addWidget(self.flip_button)
+        self.setLayout(layout)
     
-    def add_flashcard(self, front, back, notes=""):
-        """Menambahkan flashcard baru ke deck."""
-        card = Flashcard(front, back, notes)
-        self.flashcards.append(card)
-        return card
+    def display_card(self, card: Flashcard):
+        """Menampilkan kartu yang dipilih."""
+        self.current_card = card
+        self.is_flipped = False
+        self.update_display()
     
-    def remove_flashcard(self, card_id):
-        """Menghapus flashcard berdasarkan ID."""
-        self.flashcards = [card for card in self.flashcards if card.id != card_id]
+    def flip_card(self):
+        """Membalik kartu antara sisi depan dan belakang."""
+        if self.current_card:
+            self.is_flipped = not self.is_flipped
+            self.update_display()
     
-    def get_flashcard(self, index):
-        """Mengambil flashcard berdasarkan indeks."""
-        if 0 <= index < len(self.flashcards):
-            return self.flashcards[index]
-        return None
-    
-    def to_dict(self):
-        """Mengubah deck menjadi dictionary agar bisa disimpan dalam JSON."""
-        return {
-            "name": self.name,
-            "flashcards": [card.to_dict() for card in self.flashcards]
-        }
-    
-    @classmethod
-    def from_dict(cls, data):
-        """Membuat deck dari dictionary."""
-        flashcards = [Flashcard.from_dict(card_data) for card_data in data.get("flashcards", [])]
-        return cls(name=data.get("name", ""), flashcards=flashcards)
+    def update_display(self):
+        """Memperbarui tampilan teks kartu."""
+        if self.current_card:
+            text = self.current_card.back if self.is_flipped else self.current_card.front
+            self.card_label.setText(text)
+        else:
+            self.card_label.setText("No flashcard available.\nPlease select a deck.")
