@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QMainWindow
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QMainWindow
 from PyQt6.QtCore import pyqtSignal, QObject
 import sys
 
@@ -58,8 +58,9 @@ class UserStats:
                 f"Total jawaban salah: {self.incorrect_answers}\n"
                 f"Akurasi: {self.get_akurasi():.2f}%")
 
-class FlashcardAppAnjay(QWidget):
+class Tombol_Benar(QWidget):
     cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
+    cardMarkedWrong = pyqtSignal(int)  # Signal untuk menandai kartu sebagai salah
 
     def __init__(self):
         super().__init__()
@@ -68,15 +69,21 @@ class FlashcardAppAnjay(QWidget):
         self.feedback_given = False  # Status feedback
         
         # Layout utama
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
 
         # Tombol "Got it Right ✓"
         self.right_btn = QPushButton("Got it Right ✓")
         self.right_btn.setStyleSheet("background-color: #8aff8a; font-weight: bold;") 
         self.right_btn.clicked.connect(self.mark_right)  # Koneksi tombol ke fungsi
 
+        # Tombol "Got it Wrong X"
+        self.wrong_btn = QPushButton("Got it Wrong X")
+        self.wrong_btn.setStyleSheet("background-color: #ff0000; font-weight: bold;") 
+        self.wrong_btn.clicked.connect(self.mark_wrong)  # Koneksi tombol ke fungsi
+
         # Tambahkan tombol ke layout
         self.layout.addWidget(self.right_btn)
+        self.layout.addWidget(self.wrong_btn)
         self.setLayout(self.layout)
 
         
@@ -86,15 +93,26 @@ class FlashcardAppAnjay(QWidget):
         print("Tombol 'Got it Right ✓' ditekan")  # Debugging Output
         self.feedback_given = True
         self.cardMarkedRight.emit(self.current_index)  # Memancarkan sinyal
-        self.update_feedback_buttons()  # Memperbarui tampilan tombol
+        self.update_feedback_buttons_right()  # Memperbarui tampilan tombol
+        
+    def mark_wrong(self):
+        """Menandai jawaban sebagai salah"""
+        print("Tombol 'Got it Wrong X' ditekan")  # Debugging Output
+        self.feedback_given = True
+        self.update_feedback_buttons_wrong()  # Perbarui tampilan tombol
 
-    def update_feedback_buttons(self):
+    def update_feedback_buttons_right(self):
         """ Contoh fungsi update tombol setelah ditekan """
         self.right_btn.setText("✔ Marked as Right")  # Ubah teks tombol
         self.right_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
 
+    def update_feedback_buttons_wrong(self):
+        """ Contoh fungsi update tombol setelah ditekan """
+        self.wrong_btn.setText("X Marked as Wrong")  # Ubah teks tombol
+        self.wrong_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
+
 # Menjalankan aplikasi
 app = QApplication(sys.argv)
-window = FlashcardApp()
+window = Tombol_Benar()
 window.show()
 sys.exit(app.exec())
