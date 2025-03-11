@@ -1,13 +1,12 @@
-import sys
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QPushButton, QListWidget,
-    QTextEdit, QVBoxLayout, QHBoxLayout, QWidget
+    QMainWindow, QLabel, QPushButton, QListWidget, QTextEdit,
+    QVBoxLayout, QHBoxLayout, QWidget
 )
 from PyQt6.QtCore import Qt
 
 class FlashcardApp(QMainWindow):
-    def __init__(self):  
-        super().__init__() 
+    def __init__(self):
+        super().__init__()
 
         self.setWindowTitle("Flashcard App Test")
         self.setGeometry(100, 100, 800, 500)
@@ -18,7 +17,7 @@ class FlashcardApp(QMainWindow):
         title_deck = QLabel("Flashcard Decks")
         title_deck.setStyleSheet("font-weight: bold; font-size: 16px;")
 
-        title_main = QLabel("Select a Deck")
+        title_main = QLabel("Flashcard Viewer")
         title_main.setStyleSheet("font-weight: bold; font-size: 16px;")
         title_main.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -43,9 +42,29 @@ class FlashcardApp(QMainWindow):
         deck_layout.addWidget(self.btn_delete_deck)
 
         # === Bagian Tengah (Tampilan Utama) ===
-        self.main_label = QLabel("Welcome! Please select or create a deck to start.")
+        flashcard_layout = QVBoxLayout()
+        self.main_label = QLabel("No flashcard available.\nPlease create or select a deck.")
         self.main_label.setStyleSheet("font-size: 14px; color: gray;")
         self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # === Tombol Navigasi Flashcard ===
+        nav_layout = QHBoxLayout()
+        self.btn_previous = QPushButton("Previous")
+        self.btn_flip = QPushButton("Flip Card")
+        self.btn_next = QPushButton("Next")
+
+        nav_layout.addWidget(self.btn_previous)
+        nav_layout.addWidget(self.btn_flip)
+        nav_layout.addWidget(self.btn_next)
+
+        # === Tombol Tambahan ===
+        self.btn_add_card = QPushButton("Add New Flashcard")
+        self.btn_manage_cards = QPushButton("Manage All Cards")
+
+        flashcard_layout.addWidget(self.main_label)
+        flashcard_layout.addLayout(nav_layout)
+        flashcard_layout.addWidget(self.btn_add_card)
+        flashcard_layout.addWidget(self.btn_manage_cards)
 
         # === Bagian Kanan (Card Notes) ===
         notes_layout = QVBoxLayout()
@@ -58,7 +77,7 @@ class FlashcardApp(QMainWindow):
 
         # === Menggabungkan semua layout ke main_layout ===
         main_layout.addLayout(deck_layout, 2)
-        main_layout.addWidget(self.main_label, 5)
+        main_layout.addLayout(flashcard_layout, 5)
         main_layout.addLayout(notes_layout, 2)
 
         # === Menggabungkan header dan main layout ===
@@ -70,10 +89,3 @@ class FlashcardApp(QMainWindow):
         container = QWidget()
         container.setLayout(final_layout)
         self.setCentralWidget(container)
-
-# === Menjalankan Aplikasi ===
-if __name__ == "__main__":  
-    app = QApplication(sys.argv)
-    window = FlashcardApp()
-    window.show()
-    sys.exit(app.exec())
