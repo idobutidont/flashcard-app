@@ -58,7 +58,7 @@ class UserStats:
                 f"Total jawaban salah: {self.incorrect_answers}\n"
                 f"Akurasi: {self.get_akurasi():.2f}%")
 
-class FlashcardApp(QWidget):
+class FlashcardAppAnjay(QWidget):
     cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
 
     def __init__(self):
