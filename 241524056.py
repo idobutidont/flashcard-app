@@ -1,5 +1,6 @@
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QMainWindow
+from PyQt6.QtCore import pyqtSignal, QObject
 import sys
-from PyQt6.QtWidgets import QPushButton, QApplication, QWidget, QVBoxLayout
 
 class UserStats:
     def __init__(self):
@@ -57,8 +58,43 @@ class UserStats:
                 f"Total jawaban salah: {self.incorrect_answers}\n"
                 f"Akurasi: {self.get_akurasi():.2f}%")
 
+class FlashcardApp(QWidget):
+    cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
+
+    def __init__(self):
+        super().__init__()
+
+        self.current_index = 0  # Contoh indeks kartu saat ini
+        self.feedback_given = False  # Status feedback
+        
+        # Layout utama
+        self.layout = QVBoxLayout()
+
+        # Tombol "Got it Right ✓"
+        self.right_btn = QPushButton("Got it Right ✓")
+        self.right_btn.setStyleSheet("background-color: #8aff8a; font-weight: bold;") 
+        self.right_btn.clicked.connect(self.mark_right)  # Koneksi tombol ke fungsi
+
+        # Tambahkan tombol ke layout
+        self.layout.addWidget(self.right_btn)
+        self.setLayout(self.layout)
+
+        
+
+    def mark_right(self):
+        """ Fungsi yang dijalankan saat tombol ditekan """
+        print("Tombol 'Got it Right ✓' ditekan")  # Debugging Output
+        self.feedback_given = True
+        self.cardMarkedRight.emit(self.current_index)  # Memancarkan sinyal
+        self.update_feedback_buttons()  # Memperbarui tampilan tombol
+
+    def update_feedback_buttons(self):
+        """ Contoh fungsi update tombol setelah ditekan """
+        self.right_btn.setText("✔ Marked as Right")  # Ubah teks tombol
+        self.right_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
+
 # Menjalankan aplikasi
 app = QApplication(sys.argv)
-window = UserStats()
+window = FlashcardApp()
 window.show()
 sys.exit(app.exec())
