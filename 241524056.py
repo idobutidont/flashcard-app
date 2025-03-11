@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QPushButton
+import sys
+from PyQt6.QtWidgets import QPushButton, QApplication, QWidget, QVBoxLayout
 
 class UserStats:
     def __init__(self):
@@ -55,3 +56,9 @@ class UserStats:
                 f"Total jawaban benar: {self.correct_answers}\n"
                 f"Total jawaban salah: {self.incorrect_answers}\n"
                 f"Akurasi: {self.get_akurasi():.2f}%")
+
+# Menjalankan aplikasi
+app = QApplication(sys.argv)
+window = UserStats()
+window.show()
+sys.exit(app.exec())
