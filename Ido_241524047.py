@@ -1,6 +1,5 @@
-import uuid
-import os
-import json
+import os, json, uuid
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton)
 
 # TODO: Proper Docstring
 
@@ -141,3 +140,52 @@ class DataManager:
             os.remove(deck_path)
             return True
         return False
+
+# New Flashcard Window
+class AddCardDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        self.setWindowTitle("Add New Flashcard")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout()
+        
+        # Front of card
+        layout.addWidget(QLabel("Front (Question):"))
+        self.front_text = QTextEdit()
+        self.front_text.setMaximumHeight(100)
+        layout.addWidget(self.front_text)
+        
+        # Back of card
+        layout.addWidget(QLabel("Back (Answer):"))
+        self.back_text = QTextEdit()
+        self.back_text.setMaximumHeight(100)
+        layout.addWidget(self.back_text)
+        
+        # Predefined Notes
+        layout.addWidget(QLabel("Notes (Optional):"))
+        self.notes_text = QTextEdit()
+        layout.addWidget(self.notes_text)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        self.add_btn = QPushButton("Add Card")
+        self.add_btn.clicked.connect(self.accept)
+        
+        btn_layout.addWidget(self.cancel_btn)
+        btn_layout.addWidget(self.add_btn)
+        layout.addLayout(btn_layout)
+        
+        self.setLayout(layout)
+    
+    def get_card_data(self):
+        return {
+            "front": self.front_text.toPlainText(),
+            "back": self.back_text.toPlainText(),
+            "notes": self.notes_text.toPlainText()
+        }
