@@ -1,7 +1,8 @@
 import os, json, uuid
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton)
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox)
+from PyQt6.QtCore import Qt
 
-# TODO: Proper Docstring
+# TODO: Proper Docstring and code comments
 
 
 # Flashcard (Middle Panel)
@@ -97,9 +98,6 @@ class Deck:
 # Data Manager (stores json in txt)
 class DataManager:
     def __init__(self, data_dir="data"):
-        """
-        
-        """
         self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
     
@@ -141,6 +139,7 @@ class DataManager:
             return True
         return False
 
+
 # New Flashcard Window
 class AddCardDialog(QDialog):
     def __init__(self, parent=None):
@@ -165,7 +164,7 @@ class AddCardDialog(QDialog):
         self.back_text.setMaximumHeight(100)
         layout.addWidget(self.back_text)
         
-        # Predefined Notes
+        # Pre-defined Notes (optional) if the user wants it beforehand
         layout.addWidget(QLabel("Notes (Optional):"))
         self.notes_text = QTextEdit()
         layout.addWidget(self.notes_text)
@@ -189,3 +188,179 @@ class AddCardDialog(QDialog):
             "back": self.back_text.toPlainText(),
             "notes": self.notes_text.toPlainText()
         }
+
+
+# Edit Card Window
+class EditCardDialog(QDialog):
+    def __init__(self, card, parent=None):
+        super().__init__(parent)
+        self.card = card
+        self.init_ui()
+        
+    def init_ui(self):
+        self.setWindowTitle("Edit Flashcard")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout()
+        
+        # Front of card
+        layout.addWidget(QLabel("Front (Question):"))
+        self.front_text = QTextEdit()
+        self.front_text.setMaximumHeight(100)
+        self.front_text.setText(self.card.front)
+        layout.addWidget(self.front_text)
+        
+        # Back of card
+        layout.addWidget(QLabel("Back (Answer):"))
+        self.back_text = QTextEdit()
+        self.back_text.setMaximumHeight(100)
+        self.back_text.setText(self.card.back)
+        layout.addWidget(self.back_text)
+        
+        # Notes
+        layout.addWidget(QLabel("Notes (Optional):"))
+        self.notes_text = QTextEdit()
+        self.notes_text.setText(self.card.notes)
+        layout.addWidget(self.notes_text)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        self.save_btn = QPushButton("Save Changes")
+        self.save_btn.clicked.connect(self.accept)
+        
+        btn_layout.addWidget(self.cancel_btn)
+        btn_layout.addWidget(self.save_btn)
+        layout.addLayout(btn_layout)
+        
+        self.setLayout(layout)
+    
+    def get_card_data(self):
+        return {
+            "front": self.front_text.toPlainText(),
+            "back": self.back_text.toPlainText(),
+            "notes": self.notes_text.toPlainText()
+        }
+
+
+# Card Manager Window
+class ManageCardsDialog(QDialog):
+    def __init__(self, deck, parent=None):
+        super().__init__(parent)
+        self.deck = deck
+        self.init_ui()
+        self.populate_cards()
+        
+    def init_ui(self):
+        self.setWindowTitle(f"Manage Flashcards - {self.deck.name}")
+        self.setMinimumSize(600, 400)
+        
+        layout = QVBoxLayout()
+        
+        # Header
+        header_label = QLabel(f"Flashcards in deck: {self.deck.name}")
+        header_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(header_label)
+        
+        # Card list
+        self.card_list = QListWidget()
+        self.card_list.setAlternatingRowColors(True)
+        layout.addWidget(self.card_list)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.add_btn = QPushButton("Add New Card")
+        self.add_btn.clicked.connect(self.add_card)
+        
+        self.edit_btn = QPushButton("Edit Selected Card")
+        self.edit_btn.clicked.connect(self.edit_card)
+        
+        self.delete_btn = QPushButton("Delete Selected Card")
+        self.delete_btn.clicked.connect(self.delete_card)
+        
+        btn_layout.addWidget(self.add_btn)
+        btn_layout.addWidget(self.edit_btn)
+        btn_layout.addWidget(self.delete_btn)
+        
+        layout.addLayout(btn_layout)
+        
+        # Close button at bottom
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+        layout.addWidget(close_btn)
+        
+        self.setLayout(layout)
+    
+    def populate_cards(self):
+        self.card_list.clear()
+        for card in self.deck.flashcards:
+            item = QListWidgetItem(f"Q: {card.front[:30]}{'...' if len(card.front) > 30 else ''}")
+            item.setData(Qt.ItemDataRole.UserRole, card.id)
+            self.card_list.addItem(item)
+    
+    def add_card(self):
+        dialog = AddCardDialog(self)
+        if dialog.exec():
+            card_data = dialog.get_card_data()
+            if not card_data["front"] or not card_data["back"]:
+                QMessageBox.warning(self, "Warning", "The front and back of the card cannot be empty.")
+                return
+                
+            new_card = self.deck.add_flashcard(
+                card_data["front"], card_data["back"], card_data["notes"]
+            )
+            
+            # Update the list
+            self.populate_cards()
+            
+            # Return True to tell that the deck was modified
+            self.setResult(QDialog.DialogCode.Accepted)
+    
+    def edit_card(self):
+        if not self.card_list.currentItem():
+            QMessageBox.warning(self, "Warning", "Please select a card to edit.")
+            return
+            
+        card_id = self.card_list.currentItem().data(Qt.ItemDataRole.UserRole)
+        card = next((card for card in self.deck.flashcards if card.id == card_id), None)
+        
+        if card:
+            dialog = EditCardDialog(card, self)
+            if dialog.exec():
+                card_data = dialog.get_card_data()
+                if not card_data["front"] or not card_data["back"]:
+                    QMessageBox.warning(self, "Warning", "The front and back of the card cannot be empty.")
+                    return
+                    
+                card.front = card_data["front"]
+                card.back = card_data["back"]
+                card.notes = card_data["notes"]
+                
+                # Update the list display
+                self.populate_cards()
+                
+                # Return True to tell that the deck was modified
+                self.setResult(QDialog.DialogCode.Accepted)
+    
+    def delete_card(self):
+        if not self.card_list.currentItem():
+            QMessageBox.warning(self, "Warning", "Please select a card to delete.")
+            return
+            
+        card_id = self.card_list.currentItem().data(Qt.ItemDataRole.UserRole)
+        
+        confirm = QMessageBox.question(
+            self, 
+            "Confirm Deletion",
+            "Are you sure you want to delete this flashcard?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if confirm == QMessageBox.StandardButton.Yes:
+            self.deck.remove_flashcard(card_id)
+            self.populate_cards()
+            
+            # Return True to tell that the deck was modified
+            self.setResult(QDialog.DialogCode.Accepted)
