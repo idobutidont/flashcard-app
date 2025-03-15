@@ -58,7 +58,7 @@ class UserStats:
                 f"Total jawaban salah: {self.incorrect_answers}\n"
                 f"Akurasi: {self.get_akurasi():.2f}%")
 
-class Tombol_Benar(QWidget):
+class TombolBenarSalah(QWidget):
     cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
     cardMarkedWrong = pyqtSignal(int)  # Signal untuk menandai kartu sebagai salah
 
@@ -67,6 +67,9 @@ class Tombol_Benar(QWidget):
 
         self.current_index = 0  # Contoh indeks kartu saat ini
         self.feedback_given = False  # Status feedback
+        self.total_attempt = 0
+        self.correct_answers = 0
+        self.incorrect_answers = 0
         
         # Layout utama
         self.layout = QHBoxLayout()
@@ -93,26 +96,36 @@ class Tombol_Benar(QWidget):
         print("Tombol 'Got it Right ✓' ditekan")  # Debugging Output
         self.feedback_given = True
         self.cardMarkedRight.emit(self.current_index)  # Memancarkan sinyal
+        self.total_attempt += 1
+        self.correct_answers += 1  # Tambah jumlah jawaban benar
         self.update_feedback_buttons_right()  # Memperbarui tampilan tombol
         
     def mark_wrong(self):
         """Menandai jawaban sebagai salah"""
         print("Tombol 'Got it Wrong X' ditekan")  # Debugging Output
         self.feedback_given = True
+        self.cardMarkedWrong.emit(self.current_index)
+        self.total_attempt += 1
+        self.incorrect_answers += 1  # Tambah jumlah jawaban salah
         self.update_feedback_buttons_wrong()  # Perbarui tampilan tombol
 
     def update_feedback_buttons_right(self):
         """ Contoh fungsi update tombol setelah ditekan """
         self.right_btn.setText("✔ Marked as Right")  # Ubah teks tombol
-        self.right_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
+        self.hideButton()
 
     def update_feedback_buttons_wrong(self):
         """ Contoh fungsi update tombol setelah ditekan """
         self.wrong_btn.setText("X Marked as Wrong")  # Ubah teks tombol
-        self.wrong_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
+        self.hideButton()
+        
+    def hideButton(self):
+        self.right_btn.hide()
+        self.wrong_btn.hide()
+        
 
 # Menjalankan aplikasi
 app = QApplication(sys.argv)
-window = Tombol_Benar()
+window = TombolBenarSalah()
 window.show()
 sys.exit(app.exec())
