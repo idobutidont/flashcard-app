@@ -22,87 +22,418 @@ class DeckPanel(QWidget):
         self.setLayout(layout)
 
 # === Bagian Tengah (Tampilan Flashcard) ===
-class FlashcardViewer(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QVBoxLayout()
-        
-        self.main_label = QLabel("No flashcard available.\nPlease create or select a deck.")
-        self.main_label.setStyleSheet("font-size: 14px; color: gray;")
-        self.main_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        # Tombol Navigasi Flashcard
-        nav_layout = QHBoxLayout()
-        self.btn_previous = QPushButton("Previous")
-        self.btn_flip = QPushButton("Flip Card")
-        self.btn_next = QPushButton("Next")
-        
-        nav_layout.addWidget(self.btn_previous)
-        nav_layout.addWidget(self.btn_flip)
-        nav_layout.addWidget(self.btn_next)
-        
-        self.btn_add_card = QPushButton("Add New Flashcard")
-        self.btn_manage_cards = QPushButton("Manage All Cards")
-        
-        layout.addWidget(self.main_label)
-        layout.addLayout(nav_layout)
-        layout.addWidget(self.btn_add_card)
-        layout.addWidget(self.btn_manage_cards)
-        
-        self.setLayout(layout)
+from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel)
+from PyQt6.QtCore import Qt
 
-# === Bagian Kanan (Notes Panel) ===
-class NotesPanel(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QVBoxLayout()
-        
-        self.notes_text = QTextEdit()
-        self.notes_text.setPlaceholderText("Add your notes for this card here...")
-        self.btn_save_notes = QPushButton("Save Notes")
-        
-        layout.addWidget(self.notes_text)
-        layout.addWidget(self.btn_save_notes)
-        
-        self.setLayout(layout)
+from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog
+from Zein_241524056 import StatsManager
+from Lukman_241524050 import NotesPanel, NotesManager
+from Fakhri_241524053 import FlashcardDisplay
 
-# === Aplikasi Utama ===
-class FlashcardApp(QMainWindow):
+class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout() # Menggunakan layout vertikal 
+        
+        # Judul pada panel 
+        title = QLabel("Flashcard Decks")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title)
+        
+        # Daftar deck 
+        self.deck_list = QListWidget()
+        layout.addWidget(self.deck_list)
+        
+        # Tombol untuk menambah dan menghapus deck 
+        self.add_deck_btn = QPushButton("Add New Deck")
+        self.delete_deck_btn = QPushButton("Delete Deck")
+        
+        layout.addWidget(self.add_deck_btn)
+        layout.addWidget(self.delete_deck_btn)
+        
+        self.setLayout(layout)  # Untuk mengatur layout utama 
+    
+    def populate_decks(self, decks): # Mengisi daftar deck dengan nama - nama deck yang tersedia 
+        self.deck_list.clear()
+        for deck in decks:
+            self.deck_list.addItem(deck.name)
+    
+    def get_selected_deck_name(self): # Mengambil nama deck yang dipiih dalam daftar
+        if self.deck_list.currentItem():
+            return self.deck_list.currentItem().text()
+        return None
+
+# Clas dari aplikasi di flashcard
+class FlashcardApp(QMainWindow): 
     def __init__(self):
         super().__init__()
+        self.data_manager = DataManager() # Objek mengelola data 
+        self.decks = []  # Untuk menyimpan daftar deck 
+        self.current_deck = None  # Menyimpan deck yang sedang di pilih
+        self.init_ui()
+        self.load_decks()
+
+    def init_ui(self):
         self.setWindowTitle("Flashcard App")
-        self.setGeometry(100, 100, 800, 500)
-        
-        # Header
-        header_layout = QHBoxLayout()
-        title_deck = QLabel("Flashcard Decks")
-        title_deck.setStyleSheet("font-weight: bold; font-size: 16px;")
-        title_main = QLabel("Flashcard Viewer")
-        title_main.setStyleSheet("font-weight: bold; font-size: 16px;")
-        title_main.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_notes = QLabel("Card Notes")
-        title_notes.setStyleSheet("font-weight: bold; font-size: 16px;")
-        
-        header_layout.addWidget(title_deck, 2)
-        header_layout.addWidget(title_main, 5)
-        header_layout.addWidget(title_notes, 2)
-        
-        # Layout utama
+        self.setMinimumSize(900, 600)
+
+        # Widget utama
+        main_widget = QWidget()
         main_layout = QHBoxLayout()
-        
-        self.deck_panel = DeckPanel()
-        self.flashcard_viewer = FlashcardViewer()
+        main_widget.setLayout(main_layout)
+
+        # Untuk membagi tampilan jadi beberapa panel 
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # Membuat panel - panel utama
+        self.deck_panel = DeckListPanel()
+        self.flashcard_display = FlashcardDisplay()
         self.notes_panel = NotesPanel()
         
-        main_layout.addWidget(self.deck_panel, 2)
-        main_layout.addWidget(self.flashcard_viewer, 5)
-        main_layout.addWidget(self.notes_panel, 2)
+        # Membuat objek pengelola statistik dan catatan 
+        self.stats_manager = StatsManager()
+        self.notes_manager = NotesManager(self.notes_panel)
+
+        # Menambahkan panel daftar deck ke dalam spilitter
+        splitter.addWidget(self.deck_panel)
         
-        # Final Layout
-        final_layout = QVBoxLayout()
-        final_layout.addLayout(header_layout)
-        final_layout.addLayout(main_layout)
+        # Panel tengah berisi tampilan flashcaard dan kontrol navigasi
+        center_panel = QWidget()
+        center_layout = QVBoxLayout()
         
-        container = QWidget()
-        container.setLayout(final_layout)
-        self.setCentralWidget(container)
+        # Menambahkan tampilan flashcard
+        center_layout.addWidget(self.flashcard_display, 1)  # 1 untuk peregangan untuk nentuin ada berapa banyak ruang yang harus diberikan 
+        
+        # Layout untuk tombol di navigasi 
+        nav_layout = QHBoxLayout()
+        self.prev_btn = QPushButton("Previous")
+        self.flip_btn = QPushButton("Flip Card")
+        self.next_btn = QPushButton("Next")
+        self.toggle_notes_btn = QPushButton("Show Notes")
+        
+        nav_layout.addWidget(self.prev_btn)
+        nav_layout.addWidget(self.flip_btn)
+        nav_layout.addWidget(self.next_btn)
+        nav_layout.addWidget(self.toggle_notes_btn)
+        center_layout.addLayout(nav_layout)
+        
+        # Layout untuk tombol feedback (benar/salah)
+        feedback_layout = QHBoxLayout()
+        right_btn, wrong_btn, stats_label = self.stats_manager.setup_feedback_elements()
+        feedback_layout.addWidget(right_btn)
+        feedback_layout.addWidget(wrong_btn)
+        feedback_layout.addWidget(stats_label)
+        center_layout.addLayout(feedback_layout)
+        
+        # Layout untuk tombol manajemen kartu 
+        card_mgmt_layout = QHBoxLayout()
+        self.add_card_btn = QPushButton("Add New Flashcard")
+        self.manage_cards_btn = QPushButton("Manage All Cards")
+        
+        card_mgmt_layout.addWidget(self.add_card_btn)
+        card_mgmt_layout.addWidget(self.manage_cards_btn)
+        center_layout.addLayout(card_mgmt_layout)
+        
+        center_panel.setLayout(center_layout)
+        splitter.addWidget(center_panel)
+        
+        # Menambahkan catetan ke dalam splitter 
+        splitter.addWidget(self.notes_panel)
+
+        # Mengatur ukuran awal masing - masing panel dalam splitter
+        splitter.setSizes([200, 500, 200])
+
+        main_layout.addWidget(splitter)
+        self.setCentralWidget(main_widget)
+
+        # Menyembunyikan tombol tertentu hingga deck sudah di pilih 
+        self.update_button_visibility(False)
+        
+        # Menghubungkan sinyal 
+        self.connect_signals()
+
+    def update_button_visibility(self, has_deck_selected):
+        """Mengatur visibilitas tombol berdasarkan apakah ada deck yang dipilih"""
+        # Navigation buttons
+        self.prev_btn.setVisible(has_deck_selected)
+        self.flip_btn.setVisible(has_deck_selected)
+        self.next_btn.setVisible(has_deck_selected)
+        self.toggle_notes_btn.setVisible(has_deck_selected and self.flashcard_display.showing_front)
+        
+        # Card management buttons
+        self.add_card_btn.setVisible(has_deck_selected)
+        self.manage_cards_btn.setVisible(has_deck_selected)
+        
+        # Mengatur tombol feedback (benar/salah)
+        if has_deck_selected:
+            # Hanya perbarui jika kita memiliki deck, jika tidak biarkan tersembunyi
+            self.stats_manager.update_feedback_buttons(
+                self.flashcard_display.showing_front,
+                self.flashcard_display.get_current_card()
+            )
+        else:
+            # Sembunyikan secara eksplisit jika tidak ada deck yang dipilih
+            self.stats_manager.right_btn.setVisible(False)
+            self.stats_manager.wrong_btn.setVisible(False)
+            self.stats_manager.stats_label.setVisible(False)
+
+    def connect_signals(self):
+        # Menghubungkan sinyal untuk interaksi dalam aplikasi 
+        # Deck panel signals
+        self.deck_panel.add_deck_btn.clicked.connect(self.add_deck)
+        self.deck_panel.delete_deck_btn.clicked.connect(self.delete_deck)
+        self.deck_panel.deck_list.itemClicked.connect(self.select_deck)
+
+        # Flashcard navigation signals
+        self.flip_btn.clicked.connect(self.flip_card)
+        self.next_btn.clicked.connect(self.next_card)
+        self.prev_btn.clicked.connect(self.prev_card)
+        self.toggle_notes_btn.clicked.connect(self.toggle_notes)
+
+        # Card management signals
+        self.add_card_btn.clicked.connect(self.add_flashcard)
+        self.manage_cards_btn.clicked.connect(self.manage_flashcards)
+        
+        # Stats manager signals
+        self.stats_manager.right_btn.clicked.connect(lambda: self.mark_card_feedback(True))
+        self.stats_manager.wrong_btn.clicked.connect(lambda: self.mark_card_feedback(False))
+        self.stats_manager.cardMarkedRight.connect(lambda idx: self.handle_card_feedback(idx, True))
+        self.stats_manager.cardMarkedWrong.connect(lambda idx: self.handle_card_feedback(idx, False))
+        
+        # Connect flashcard display signals
+        self.flashcard_display.cardFlipped.connect(self.handle_card_flip)
+        self.flashcard_display.cardChanged.connect(self.handle_card_changed)
+        
+        # Notes panel signals
+        self.notes_panel.save_btn.clicked.connect(self.save_notes)
+
+    def load_decks(self):
+        self.decks = self.data_manager.load_decks()
+        self.deck_panel.populate_decks(self.decks)
+
+    def add_deck(self):
+        name, ok = QInputDialog.getText(self, "Add New Deck", "Enter deck name:")
+        if ok and name:
+            # Mengecek duplikat nama
+            if any(deck.name == name for deck in self.decks):
+                QMessageBox.warning(
+                    self, "Warning", "A deck with this name already exists."
+                )
+                return
+
+            new_deck = Deck(name)
+            self.decks.append(new_deck)
+            self.data_manager.save_deck(new_deck)
+            self.deck_panel.populate_decks(self.decks)
+
+    def delete_deck(self):
+        deck_name = self.deck_panel.get_selected_deck_name()
+        if not deck_name:
+            return
+
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Are you sure you want to delete the deck '{deck_name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if confirm == QMessageBox.StandardButton.Yes:
+            self.data_manager.delete_deck(deck_name)
+            self.decks = [deck for deck in self.decks if deck.name != deck_name]
+            self.deck_panel.populate_decks(self.decks)
+
+            # Hapus tampilan saat ini jika dek yang dihapus dipilih
+            if self.current_deck and self.current_deck.name == deck_name:
+                self.current_deck = None
+                self.flashcard_display.show_welcome_screen()
+                self.notes_panel.set_card(None)
+                
+                # Sembunyikan tombol saat tidak ada dek yang dipilih
+                self.update_button_visibility(False)
+
+    def select_deck(self):
+        deck_name = self.deck_panel.get_selected_deck_name()
+        if deck_name:
+            for deck in self.decks:
+                if deck.name == deck_name:
+                    self.current_deck = deck
+                    showing_front, notes_visible = self.flashcard_display.set_deck(deck)
+                    
+                    # Mengupdate notes dan stats display
+                    self.notes_manager.update_notes_panel(
+                        deck, 
+                        self.flashcard_display.current_index, 
+                        showing_front,
+                        notes_visible
+                    )
+                    
+                    # Mengreset stats manager state
+                    self.stats_manager.reset_feedback_state()
+                    self.stats_manager.update_feedback_buttons(
+                        showing_front, 
+                        self.flashcard_display.get_current_card()
+                    )
+                    
+                    # Update the toggle notes button (Untuk card sebelum di flip tidak terlihat jawaban nya)
+                    self.notes_manager.update_toggle_notes_button(
+                        self.toggle_notes_btn,
+                        showing_front,
+                        notes_visible
+                    )
+                    
+                    # Tampilkan tombol sekarang setelah dek dipilih
+                    self.update_button_visibility(True)
+                    break
+
+    def flip_card(self):
+        showing_front, card = self.flashcard_display.flip_card()
+        
+        # Update stats display
+        self.stats_manager.update_feedback_buttons(showing_front, card)
+        
+        # Perbarui visibilitas catatan berdasarkan sisi kartu
+        self.notes_manager.handle_card_flip(
+            not showing_front, 
+            self.flashcard_display.notes_visible
+        )
+        
+        # Update toggle notes button
+        self.notes_manager.update_toggle_notes_button(
+            self.toggle_notes_btn,
+            showing_front,
+            self.flashcard_display.notes_visible
+        )
+
+    def next_card(self):
+        # Panggil saja metode tampilan kartu flash - penanganannya dilakukan di penangan cardChanged
+        self.flashcard_display.next_card()
+
+    def prev_card(self):
+        # Panggil saja metode tampilan kartu flash - penanganannya dilakukan di penangan cardChanged
+        self.flashcard_display.prev_card()
+        
+    def handle_card_changed(self, index, showing_front):
+        """Handle card changed event from flashcard display"""
+        # Reset feedback state for new card
+        self.stats_manager.reset_feedback_state()
+        
+        # Get the current card
+        card = self.flashcard_display.get_current_card()
+        
+        # Update stats display
+        self.stats_manager.update_feedback_buttons(showing_front, card)
+        
+        # Update notes panel for new card
+        self.notes_manager.update_notes_panel(
+            self.current_deck, 
+            index, 
+            showing_front, 
+            self.flashcard_display.notes_visible
+        )
+        
+        # Update toggle notes button
+        self.notes_manager.update_toggle_notes_button(
+            self.toggle_notes_btn,
+            showing_front,
+            self.flashcard_display.notes_visible
+        )
+
+    def toggle_notes(self):
+        notes_visible = self.flashcard_display.toggle_notes_visibility()
+        self.notes_manager.toggle_notes_visibility(notes_visible)
+        self.notes_manager.update_toggle_notes_button(
+            self.toggle_notes_btn,
+            self.flashcard_display.showing_front,
+            notes_visible
+        )
+
+    def save_notes(self):
+        if self.notes_manager.save_notes() and self.current_deck:
+            self.data_manager.save_deck(self.current_deck)
+            QMessageBox.information(self, "Success", "Notes saved successfully.")
+
+    def handle_card_flip(self, is_showing_answer):
+        self.notes_manager.handle_card_flip(
+            is_showing_answer, 
+            self.flashcard_display.notes_visible
+        )
+
+    def add_flashcard(self):
+        if not self.current_deck:
+            QMessageBox.warning(self, "Warning", "Please select a deck first.")
+            return
+
+        dialog = AddCardDialog(self)
+        if dialog.exec():
+            card_data = dialog.get_card_data()
+            if not card_data["front"] or not card_data["back"]:
+                QMessageBox.warning(
+                    self, "Warning", "Front and back of the card cannot be empty."
+                )
+                return
+
+            self.current_deck.add_flashcard(
+                card_data["front"], card_data["back"], card_data["notes"]
+            )
+
+            # Update the display and save
+            card = self.flashcard_display.update_card_display()
+            self.stats_manager.update_feedback_buttons(
+                self.flashcard_display.showing_front, 
+                card
+            )
+            self.data_manager.save_deck(self.current_deck)
+
+    def manage_flashcards(self):
+        if not self.current_deck:
+            QMessageBox.warning(self, "Warning", "Please select a deck first.")
+            return
+            
+        dialog = ManageCardsDialog(self.current_deck, self)
+        if dialog.exec():
+            # Jika perubahan dilakukan pada dialog, perbarui tampilan dan simpan
+            card = self.flashcard_display.update_card_display()
+            
+            # Update stats and notes
+            self.stats_manager.reset_feedback_state()
+            self.stats_manager.update_feedback_buttons(
+                self.flashcard_display.showing_front, 
+                card
+            )
+            
+            self.notes_manager.update_notes_panel(
+                self.current_deck,
+                self.flashcard_display.current_index,
+                self.flashcard_display.showing_front,
+                self.flashcard_display.notes_visible
+            )
+            
+            self.data_manager.save_deck(self.current_deck)
+
+    def mark_card_feedback(self, is_right):
+        """Mark the current card as right or wrong"""
+        self.stats_manager.mark_card_feedback(
+            is_right, 
+            self.flashcard_display.current_index
+        )
+        
+        # Update the feedback buttons
+        self.stats_manager.update_feedback_buttons(
+            self.flashcard_display.showing_front,
+            self.flashcard_display.get_current_card()
+        )
+
+    def handle_card_feedback(self, card_index, is_right):
+        """Handle the card feedback signal"""
+        success = self.stats_manager.process_feedback(
+            self.current_deck, 
+            card_index, 
+            is_right
+        )
+            
+        if success and self.current_deck:
+            self.data_manager.save_deck(self.current_deck)
