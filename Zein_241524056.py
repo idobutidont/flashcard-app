@@ -1,131 +1,119 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QMainWindow
-from PyQt6.QtCore import pyqtSignal, QObject
-import sys
+from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout
+from PyQt6.QtCore import QObject, pyqtSignal, Qt
 
-class UserStats:
-    def __init__(self):
-        self.total_attempt = 0
-        self.correct_answers = 0
-        self.incorrect_answers = 0
-
-        # Right/Wrong buttons
-        self.right_btn = QPushButton("Got it Right ✓")
-        self.right_btn.setStyleSheet("background-color: #8aff8a; font-weight: bold;")
-        self.right_btn.clicked.connect(self.mark_right)
-
-        self.wrong_btn = QPushButton("Got it Wrong ✗")
-        self.wrong_btn.setStyleSheet("background-color: #ff8a8a; font-weight: bold;")
-        self.wrong_btn.clicked.connect(self.mark_wrong)
-
-    def update_feedback_buttons(self):
-        """Mengubah tampilan tombol setelah ditekan"""
-        self.right_btn.setText("✔ Marked as Right")  # Ubah teks tombol
-        self.right_btn.setEnabled(False)  # Nonaktifkan tombol setelah ditekan
-
-    def mark_right(self):
-        """Menandai jawaban sebagai benar"""
-        if hasattr(self, 'current_deck') and self.current_deck and self.current_deck.flashcards:
-            self.feedback_given = True
-            # Sinyal ke aplikasi utama
-            self.cardMarkedRight.emit(self.current_index)
-            self.update_feedback_buttons()
-            self.total_attempt += 1
-            self.correct_answers += 1  # Tambah jumlah jawaban benar
-
-    def mark_wrong(self):
-        """Menandai jawaban sebagai salah"""
-        if hasattr(self, 'current_deck') and self.current_deck and self.current_deck.flashcards:
-            self.feedback_given = True
-            self.total_attempt += 1
-            self.incorrect_answers += 1  # Tambah jumlah jawaban salah
-
-    def get_akurasi(self):
-        """Menghitung persentase akurasi jawaban"""
-        if self.total_attempt == 0:
-            return 0
-        return (self.correct_answers / self.total_attempt) * 100
-
-    def reset_stats(self):
-        """Mengatur ulang statistik ke nol"""
-        self.total_attempt = 0
-        self.correct_answers = 0
-        self.incorrect_answers = 0
-
-    def get_stats_text(self):
-        """Mengembalikan statistik sebagai teks untuk ditampilkan di UI"""
-        return (f"Total kartu dijawab: {self.total_attempt}\n"
-                f"Total jawaban benar: {self.correct_answers}\n"
-                f"Total jawaban salah: {self.incorrect_answers}\n"
-                f"Akurasi: {self.get_akurasi():.2f}%")
-
-class TombolBenarSalah(QWidget):
+class StatsManager(QObject):
     cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
     cardMarkedWrong = pyqtSignal(int)  # Signal untuk menandai kartu sebagai salah
-
+    
     def __init__(self):
         super().__init__()
+        self.feedback_given = False
 
-        self.current_index = 0  # Contoh indeks kartu saat ini
-        self.feedback_given = False  # Status feedback
-        self.total_attempt = 0
-        self.correct_answers = 0
-        self.incorrect_answers = 0
-        
-        # Layout utama
-        self.layout = QHBoxLayout()
-
-        # Tombol "Got it Right ✓"
+    def setup_feedback_elements(self):
+        """Membuat UI untuk tombol benar/salah dan keterangan stats"""
+        # Tombol benar salah
         self.right_btn = QPushButton("Got it Right ✓")
-        self.right_btn.setStyleSheet("background-color: #8aff8a; font-weight: bold;") 
-        self.right_btn.clicked.connect(self.mark_right)  # Koneksi tombol ke fungsi
-
-        # Tombol "Got it Wrong X"
-        self.wrong_btn = QPushButton("Got it Wrong X")
-        self.wrong_btn.setStyleSheet("background-color: #ff0000; font-weight: bold;") 
-        self.wrong_btn.clicked.connect(self.mark_wrong)  # Koneksi tombol ke fungsi
-
-        # Tambahkan tombol ke layout
-        self.layout.addWidget(self.right_btn)
-        self.layout.addWidget(self.wrong_btn)
-        self.setLayout(self.layout)
-
+        self.right_btn.setStyleSheet("background-color: #8aff8a; font-weight: bold;")
         
-
-    def mark_right(self):
-        """ Fungsi yang dijalankan saat tombol ditekan """
+        self.wrong_btn = QPushButton("Got it Wrong ✗")
+        self.wrong_btn.setStyleSheet("background-color: #ff8a8a; font-weight: bold;")
+        
+        # Stats label
+        self.stats_label = QLabel("")
+        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Fixed alignment flag
+        self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        
+        # Menyembunyikan keterangan statistik benar/salah
+        self.stats_label.setVisible(False)
+        
+        return self.right_btn, self.wrong_btn, self.stats_label
+    
+    def reset_feedback_state(self):
+        """Mengatur ulang statistik ke nol"""
+        self.feedback_given = False
+    
+    def mark_right(self, card_index):
+        """Fungsi yang dijalankan saat tombol benar ditekan"""
         print("Tombol 'Got it Right ✓' ditekan")  # Debugging Output
         self.feedback_given = True
-        self.cardMarkedRight.emit(self.current_index)  # Memancarkan sinyal
-        self.total_attempt += 1
-        self.correct_answers += 1  # Tambah jumlah jawaban benar
-        self.update_feedback_buttons_right()  # Memperbarui tampilan tombol
-        
-    def mark_wrong(self):
-        """Menandai jawaban sebagai salah"""
+        self.cardMarkedRight.emit(card_index)
+    
+    def mark_wrong(self, card_index):
+        """Fungsi yang dijalankan saat tombol salah ditekan"""
         print("Tombol 'Got it Wrong X' ditekan")  # Debugging Output
         self.feedback_given = True
-        self.cardMarkedWrong.emit(self.current_index)
-        self.total_attempt += 1
-        self.incorrect_answers += 1  # Tambah jumlah jawaban salah
-        self.update_feedback_buttons_wrong()  # Perbarui tampilan tombol
-
-    def update_feedback_buttons_right(self):
-        """ Contoh fungsi update tombol setelah ditekan """
-        self.right_btn.setText("✔ Marked as Right")  # Ubah teks tombol
-        self.hideButton()
-
-    def update_feedback_buttons_wrong(self):
-        """ Contoh fungsi update tombol setelah ditekan """
-        self.wrong_btn.setText("X Marked as Wrong")  # Ubah teks tombol
-        self.hideButton()
+        self.cardMarkedWrong.emit(card_index)
         
-    def hideButton(self):
-        self.right_btn.hide()
-        self.wrong_btn.hide()
+    def mark_card_feedback(self, is_right, card_index):
+        """Menandai sebuah kartu benar atau salah"""
+        if is_right:
+            self.mark_right(card_index)
+        else:
+            self.mark_wrong(card_index)
+    
+    def update_feedback_buttons(self, showing_front, card=None):
+        """Mengupdate tombol benar/salah dan keterangan stats berdasarkan kondisi"""
+        if not card:
+            # Menyembunyikan semua tombol ketika kondisi card = none
+            self.right_btn.setVisible(False)
+            self.wrong_btn.setVisible(False)
+            self.stats_label.setVisible(False)
+            return
+            
+        # Menampilkan tombol benar dan salah
+        if not showing_front and not self.feedback_given:
+            self.right_btn.setVisible(True)
+            self.wrong_btn.setVisible(True)
+            self.stats_label.setVisible(False)
+        elif not showing_front and self.feedback_given:
+            # Menampilkan hasil statistik yang didapat setelah menekan tombol benar/salah
+            self.right_btn.setVisible(False)
+            self.wrong_btn.setVisible(False)
+            self.stats_label.setVisible(True)
+            self.update_stats_display(card)
+        else:
+            # Menyembunyikan kembali tombol benar/salah saat ke soal berikutnya ( jawaban belum ditampilkan )
+            self.right_btn.setVisible(False)
+            self.wrong_btn.setVisible(False)
+            self.stats_label.setVisible(False)
+    
+    def update_stats_display(self, card):
+        """Memperbarui jumlah benar, salah, dan akurasi pada tampilan statistik"""
+        if card:
+            total = card.right_count + card.wrong_count
+            accuracy = (card.right_count / total * 100) if total > 0 else 0
+            stats_text = f"Right: {card.right_count} | Wrong: {card.wrong_count} | Accuracy: {accuracy:.1f}%"
+            self.stats_label.setText(stats_text)
+            
+            # Menentukan warna dari teks akurasi sesuai dengan persen akurasi
+            if accuracy >= 70:
+                self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; color: green;")
+            elif accuracy >= 40:
+                self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; color: orange;")
+            else:
+                self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
+                
+    def handle_card_right(self, deck, card_index):
+        """Menangani pertambahan dari variabel jumlah jawaban benar"""
+        if deck and deck.flashcards:
+            card = deck.get_flashcard(card_index)
+            if card:
+                card.right_count += 1
+                return True
+        return False
+    
+    def handle_card_wrong(self, deck, card_index):
+        """Menangani pertambahan dari variabel jumlah jawaban salah"""
+        if deck and deck.flashcards:
+            card = deck.get_flashcard(card_index)
+            if card:
+                card.wrong_count += 1
+                return True
+        return False
         
-
-# Menjalankan aplikasi
-app = QApplication(sys.argv)
-window = TombolBenarSalah()
-window.show()
-sys.exit(app.exec())
+    def process_feedback(self, deck, card_index, is_right):
+        """Mengembalikan nilai dari variabel jumlah benar atau salah"""
+        if is_right:
+            return self.handle_card_right(deck, card_index)
+        else:
+            return self.handle_card_wrong(deck, card_index)
