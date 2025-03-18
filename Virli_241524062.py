@@ -1,27 +1,3 @@
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QPushButton, QListWidget, QTextEdit,
-    QVBoxLayout, QHBoxLayout, QWidget
-)
-from PyQt6.QtCore import Qt
-import sys
-
-# === Bagian Kiri (Flashcard Decks) ===
-class DeckPanel(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QVBoxLayout()
-        
-        self.deck_list = QListWidget()
-        self.btn_add_deck = QPushButton("Add New Deck")
-        self.btn_delete_deck = QPushButton("Delete Deck")
-        
-        layout.addWidget(self.deck_list)
-        layout.addWidget(self.btn_add_deck)
-        layout.addWidget(self.btn_delete_deck)
-        
-        self.setLayout(layout)
-
-# === Bagian Tengah (Tampilan Flashcard) ===
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel)
 from PyQt6.QtCore import Qt
 
