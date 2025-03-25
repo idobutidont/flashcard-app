@@ -1,6 +1,7 @@
 # Mengimpor modul PyQt6 yang digunakan untuk membuat tampilan UI
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QStackedWidget
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QPixmap
 
 # Kelas FlashcardDisplay untuk menampilkan kartu flashcard di tengah aplikasi
 class FlashcardDisplay(QWidget):
@@ -23,7 +24,7 @@ class FlashcardDisplay(QWidget):
         # Label judul yang menampilkan nama dek atau pesan default
         self.title_label = QLabel("Select a Deck")  
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Memusatkan teks ke tengah
-        self.title_label.setStyleSheet("font-size: 16px; color: #444; background-color: #FFDD57; padding: 20px; border-radius: 5px;")  # Atur gaya teks
+        self.title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: white; background-color: #FF5733; padding: 10px; border-radius: 5px;")  # Atur gaya teks
         layout.addWidget(self.title_label)  # Tambahkan ke layout
         
         # Widget untuk menampilkan halaman kartu dan halaman sambutan
@@ -32,7 +33,7 @@ class FlashcardDisplay(QWidget):
         # Halaman sambutan saat tidak ada dek yang dipilih
         self.welcome_widget = QLabel("Welcome! Please select or create a deck to start.")
         self.welcome_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.welcome_widget.setStyleSheet("font-size: 16px; color: gray;")
+        self.welcome_widget.setStyleSheet("font-size: 16px; color: #444; background-color: #FFDD57; padding: 20px; border-radius: 5px;")
         self.card_stack.addWidget(self.welcome_widget)  # Tambahkan ke card_stack
         
         # Widget utama untuk menampilkan kartu
@@ -41,6 +42,14 @@ class FlashcardDisplay(QWidget):
         
         # Area untuk menampilkan teks flashcard
         self.card_content = QLabel()
+
+        self.star_label = QLabel(self)
+        self.star_label.setPixmap(QPixmap("star.png").scaled(50, 50))  # Gambar bintang
+        self.star_label.setStyleSheet("background: transparent;")  
+        self.moon_label = QLabel(self)
+        self.moon_label.setPixmap(QPixmap("moon.png").scaled(50, 50))  # Gambar bulan
+        self.moon_label.setStyleSheet("background: transparent;")  
+
         self.card_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.card_content.setStyleSheet("""
             background-color: white;
@@ -53,6 +62,9 @@ class FlashcardDisplay(QWidget):
         """)    # Desain/gaya tampilan kartu
         self.card_content.setWordWrap(True)
         card_layout.addWidget(self.card_content, 1)
+
+        card_layout.addWidget(self.star_label, 0, Qt.AlignmentFlag.AlignLeft)
+        card_layout.addWidget(self.moon_label, 0, Qt.AlignmentFlag.AlignRight)
         
         # Placeholder untuk elemen feedback 
         self.feedback_placeholder = QWidget()
@@ -63,6 +75,7 @@ class FlashcardDisplay(QWidget):
         layout.addWidget(self.card_stack)
         
         self.setLayout(layout)
+        self.setStyleSheet("background-color: #FFC300;")
     
     def set_deck(self, deck):
         """Mengatur dek yang sedang digunakan dan memperbarui tampilan"""
@@ -134,3 +147,22 @@ class FlashcardDisplay(QWidget):
         """Menampilkan layar sambutan saat tidak ada dek yang dipilih"""
         self.card_stack.setCurrentIndex(0)
         self.title_label.setText("Select a Deck")
+
+
+def get_styles():
+    return {
+        "deck_list": """
+            background-color: #4A90E2;  /* Biru cerah */
+            color: white;
+            font-size: 14px;
+            border-radius: 8px;
+            padding: 5px;
+        """,
+        "notes_panel": """
+            background-color: #50C878;  /* Hijau segar */
+            color: white;
+            font-size: 14px;
+            border-radius: 8px;
+            padding: 10px;
+        """
+    }
