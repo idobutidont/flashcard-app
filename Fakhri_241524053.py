@@ -23,7 +23,7 @@ class FlashcardDisplay(QWidget):
         # Label judul yang menampilkan nama dek atau pesan default
         self.title_label = QLabel("Select a Deck")  
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Memusatkan teks ke tengah
-        self.title_label.setStyleSheet("font-size: 18px; font-weight: bold;")  # Atur gaya teks
+        self.title_label.setStyleSheet("font-size: 16px; color: #444; background-color: #FFDD57; padding: 20px; border-radius: 5px;")  # Atur gaya teks
         layout.addWidget(self.title_label)  # Tambahkan ke layout
         
         # Widget untuk menampilkan halaman kartu dan halaman sambutan
@@ -45,8 +45,8 @@ class FlashcardDisplay(QWidget):
         self.card_content.setStyleSheet("""
             background-color: white;
             color: black;
-            border: 1px solid #CCC;
-            border-radius: 5px;
+            border: 2px solid #FF4500;
+            border-radius: 10px;
             padding: 30px;
             font-size: 16px;
             min-height: 200px;
