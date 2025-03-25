@@ -44,10 +44,10 @@ class FlashcardDisplay(QWidget):
         self.card_content = QLabel()
 
         self.star_label = QLabel(self)
-        self.star_label.setPixmap(QPixmap("star.png").scaled(50, 50))  # Gambar bintang
+        self.star_label.setPixmap(QPixmap("images/star.png").scaled(50, 50))  # Gambar bintang
         self.star_label.setStyleSheet("background: transparent;")  
         self.moon_label = QLabel(self)
-        self.moon_label.setPixmap(QPixmap("moon.png").scaled(50, 50))  # Gambar bulan
+        self.moon_label.setPixmap(QPixmap("images/moon.png").scaled(50, 50))  # Gambar bulan
         self.moon_label.setStyleSheet("background: transparent;")  
 
         self.card_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
