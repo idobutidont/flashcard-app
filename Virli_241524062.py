@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QIn
 from PyQt6.QtCore import Qt
 
 from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog
-from Zein_241524056 import StatsManager
+from Zein_241524056 import StatsManager, StatsPage
 from Lukman_241524050 import NotesPanel, NotesManager
 from Fakhri_241524053 import FlashcardDisplay
 
@@ -51,6 +51,7 @@ class FlashcardApp(QMainWindow):
         self.current_deck = None  # Menyimpan deck yang sedang di pilih
         self.init_ui()
         self.load_decks()
+        self.stats_manager.start_timer()
 
     def init_ui(self):
         self.setWindowTitle("Flashcard App")
@@ -108,9 +109,11 @@ class FlashcardApp(QMainWindow):
         card_mgmt_layout = QHBoxLayout()
         self.add_card_btn = QPushButton("Add New Flashcard")
         self.manage_cards_btn = QPushButton("Manage All Cards")
-        
+        self.stats_btn = QPushButton("View Statistics") # Add stats button
+
         card_mgmt_layout.addWidget(self.add_card_btn)
         card_mgmt_layout.addWidget(self.manage_cards_btn)
+        card_mgmt_layout.addWidget(self.stats_btn) # Add to layout
         center_layout.addLayout(card_mgmt_layout)
         
         center_panel.setLayout(center_layout)
@@ -143,6 +146,9 @@ class FlashcardApp(QMainWindow):
         self.add_card_btn.setVisible(has_deck_selected)
         self.manage_cards_btn.setVisible(has_deck_selected)
         
+        # Stats button visibility
+        self.stats_btn.setVisible(has_deck_selected)
+
         # Mengatur tombol feedback (benar/salah)
         if has_deck_selected:
             # Hanya perbarui jika kita memiliki deck, jika tidak biarkan tersembunyi
@@ -185,6 +191,9 @@ class FlashcardApp(QMainWindow):
         
         # Notes panel signals
         self.notes_panel.save_btn.clicked.connect(self.save_notes)
+
+        # Add stats button signal
+        self.stats_btn.clicked.connect(self.show_stats)
 
     def load_decks(self):
         self.decks = self.data_manager.load_decks()
@@ -413,3 +422,29 @@ class FlashcardApp(QMainWindow):
             
         if success and self.current_deck:
             self.data_manager.save_deck(self.current_deck)
+
+    def show_stats(self):
+        """Show statistics for current card"""
+        if self.current_deck and self.flashcard_display.get_current_card():
+            current_card = self.flashcard_display.get_current_card()
+            stats_window = StatsPage(
+                card=current_card,
+                last_session_score=self.calculate_session_score(),
+                total_study_time=self.stats_manager.get_elapsed_time()
+            )
+            stats_window.exec()  # Use exec() instead of show() for modal dialog
+            
+            # Update display after potential reset
+            self.data_manager.save_deck(self.current_deck)
+            self.flashcard_display.update_card_display()
+    
+    def calculate_session_score(self):
+        """Calculate score for current session"""
+        if not self.current_deck or not self.current_deck.flashcards:
+            return 0
+            
+        total_right = sum(card.right_count for card in self.current_deck.flashcards)
+        total_attempts = sum(card.right_count + card.wrong_count 
+                           for card in self.current_deck.flashcards)
+        
+        return (total_right / total_attempts * 100) if total_attempts > 0 else 0
