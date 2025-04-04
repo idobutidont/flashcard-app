@@ -48,11 +48,12 @@ class Flashcard:
 
 # Deck (Left Panel)
 class Deck:
-    def __init__(self, name, flashcards=None):
+    def __init__(self, name, study_time=0, flashcards=None):
         """
         Initialize flashcard deck.
         """
         self.name = name
+        self.study_time = study_time
         self.flashcards = flashcards if flashcards else []
     
     def add_flashcard(self, front, back, notes=""):
@@ -83,6 +84,7 @@ class Deck:
         """
         return {
             "name": self.name,
+            "study_time": self.study_time,
             "flashcards": [card.to_dict() for card in self.flashcards]
         }
     
@@ -92,7 +94,7 @@ class Deck:
         
         """
         flashcards = [Flashcard.from_dict(card_data) for card_data in data.get("flashcards", [])]
-        return cls(name=data.get("name", ""), flashcards=flashcards)
+        return cls(name=data.get("name", ""), study_time=data.get("study_time", ""), flashcards=flashcards)
 
 
 # Data Manager (stores json in txt)
