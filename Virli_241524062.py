@@ -234,6 +234,7 @@ class FlashcardApp(QMainWindow):
             # Hapus tampilan saat ini jika dek yang dihapus dipilih
             if self.current_deck and self.current_deck.name == deck_name:
                 self.current_deck = None
+                self.stats_manager.set_current_deck(None)  # Reset stats manager's current deck
                 self.flashcard_display.show_welcome_screen()
                 self.notes_panel.set_card(None)
                 
@@ -245,7 +246,12 @@ class FlashcardApp(QMainWindow):
         if deck_name:
             for deck in self.decks:
                 if deck.name == deck_name:
+                    # Need to save previous deck's study time
+                    if self.current_deck:
+                        self.stats_manager.stop_timer()
+                        self.data_manager.save_deck(self.current_deck)
                     self.current_deck = deck
+                    self.stats_manager.set_current_deck(deck)  # Set current deck in StatsManager
                     showing_front, notes_visible = self.flashcard_display.set_deck(deck)
                     
                     # Mengupdate notes dan stats display
@@ -448,3 +454,10 @@ class FlashcardApp(QMainWindow):
                            for card in self.current_deck.flashcards)
         
         return (total_right / total_attempts * 100) if total_attempts > 0 else 0
+
+    def closeEvent(self, event):
+        """Save study time when closing app"""
+        if self.current_deck:
+            self.stats_manager.stop_timer()
+            self.data_manager.save_deck(self.current_deck)
+        event.accept()
