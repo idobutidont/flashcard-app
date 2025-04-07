@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QApplicat
 from PyQt6.QtCore import QObject, pyqtSignal, Qt, QElapsedTimer
 import json
 import os
+from Ido_241524047 import Deck
 
 class StatsManager(QObject):
     cardMarkedRight = pyqtSignal(int)  # Signal untuk menandai kartu sebagai benar
@@ -10,57 +11,71 @@ class StatsManager(QObject):
     def __init__(self):
         super().__init__()
         self.feedback_given = False
-        self.timer = QElapsedTimer()
-        self.total_study_time = 0  # Menyimpan total waktu belajar dalam milidetik
-        self.init_study_time()
-
-    def init_study_time(self):
-        """Create study_time.json if it doesn't exist and load saved time"""
-        try:
-            if os.path.exists("study_time.json") and os.path.getsize("study_time.json") > 0:
-                with open("study_time.json", "r") as f:
-                    data = json.load(f)
-                    self.total_study_time = data.get("total_study_time", 0)
-            else:
-                # Create file with initial value if it doesn't exist
-                self.save_study_time()
-        except Exception as e:
-            print(f"Error loading study time: {e}")
-            self.total_study_time = 0
-            self.save_study_time()
+        self.deck_timers = {}  # Dictionary to store timers for each deck
+        self.current_deck = None
 
     def save_study_time(self):
-        """Save total study time to JSON file"""
-        # Include current session time if timer is running
-        if self.timer.isValid():
-            current_time = self.timer.elapsed()
-            self.total_study_time += current_time  # Add current session
-            self.timer.restart()  # Restart timer to keep tracking
-
-        try:
-            with open("study_time.json", "w") as f:
-                json.dump({"total_study_time": self.total_study_time}, f, indent=2)
-        except Exception as e:
-            print(f"Error saving study time: {e}")
+        """Save study time directly to deck data"""
+        if self.current_deck:
+            # Add current session time if timer is running
+            if self.current_deck.name in self.deck_timers:
+                timer = self.deck_timers[self.current_deck.name]
+                if timer.isValid():
+                    elapsed = timer.elapsed()
+                    self.current_deck.study_time += elapsed
+                    timer.restart()  # Restart timer to continue tracking
 
     def start_timer(self):
-        """Memulai timer untuk menghitung waktu bermain."""
-        if not self.timer.isValid():
-            self.timer.start()
+        """Start timer for current deck"""
+        if self.current_deck and self.current_deck.name in self.deck_timers:
+            if not self.deck_timers[self.current_deck.name].isValid():
+                self.deck_timers[self.current_deck.name].start()
     
-    def stop_timer(self):
-        """Stop timer and save total time to file."""
-        if self.timer.isValid():
-            self.total_study_time += self.timer.elapsed()  # Add final session time
-            self.timer.invalidate()
-            self.save_study_time()
+    def stop_timer(self, deck_name=None):
+        """Stop timer and update deck study time"""
+        deck_name = deck_name or (self.current_deck.name if self.current_deck else None)
+        if deck_name and deck_name in self.deck_timers:
+            timer = self.deck_timers[deck_name]
+            if timer.isValid():
+                elapsed = timer.elapsed()
+                timer.invalidate()
+                
+                # Update study time in deck object
+                if self.current_deck and self.current_deck.name == deck_name:
+                    self.current_deck.study_time += elapsed
     
+    def set_current_deck(self, deck):
+        """Set current deck and initialize its study time"""
+        # Stop timer for previous deck
+        if self.current_deck and self.current_deck.name in self.deck_timers:
+            self.stop_timer(self.current_deck.name)
+
+        self.current_deck = deck
+        if deck:
+            # Create new timer for deck if it doesn't exist
+            if deck.name not in self.deck_timers:
+                self.deck_timers[deck.name] = QElapsedTimer()
+            
+            # Start timer for new deck
+            if not self.deck_timers[deck.name].isValid():
+                self.deck_timers[deck.name].start()
+
     def get_elapsed_time(self):
         """Return total study time in minutes including current session"""
-        current_total = self.total_study_time
-        if self.timer.isValid():
-            current_total += self.timer.elapsed()
-        return current_total / 60000  # Convert milliseconds to minutes
+        if not self.current_deck:
+            return 0.0
+            
+        try:
+            current_total = self.current_deck.study_time if hasattr(self.current_deck, 'study_time') else 0
+            # Add current session time if timer is running
+            if self.current_deck.name in self.deck_timers:
+                timer = self.deck_timers[self.current_deck.name]
+                if timer.isValid():
+                    current_total += timer.elapsed()
+            return current_total / 60000  # Convert milliseconds to minutes
+        except Exception as e:
+            print(f"Error calculating elapsed time: {e}")
+            return 0.0
 
     def setup_feedback_elements(self):
         """Membuat UI untuk tombol benar/salah dan keterangan stats"""
@@ -171,12 +186,65 @@ class StatsManager(QObject):
         else:
             return self.handle_card_wrong(deck, card_index)
         
-class StatsPage(QDialog):  # Change to QDialog instead of QWidget
+class StatsPage(QDialog):
     def __init__(self, card, last_session_score, total_study_time):
         super().__init__()
-
+        
+        # Set window properties 
         self.setWindowTitle("Flashcard App - Statistik")
-        self.setGeometry(100, 100, 500, 300)
+        self.setGeometry(100, 100, 600, 450) 
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f0f2f5;
+                border-radius: 10px;
+            }
+            QGroupBox {
+                background-color: white;
+                border-radius: 8px;
+                border: none;
+                margin-top: 15px;
+                font-weight: bold;
+                color: #1a1a1a;
+            }
+            QGroupBox::title {
+                color: #2c3e50;
+                subcontrol-position: top center;
+                padding: 5px;
+                background-color: transparent;
+            }
+            QLabel {
+                color: #34495e;
+                font-size: 14px;
+                padding: 8px;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+                font-weight: bold;
+                min-width: 150px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+        """)
+
+        # Add title header
+        title_label = QLabel("📊 Performance Statistics")
+        title_label.setStyleSheet("""
+            QLabel {
+                color: #2c3e50;
+                font-family: Tahoma, sans-serif;
+                font-size: 24px;
+                font-weight: bold;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 10px;
+            }
+        """)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Store card reference
         self.card = card
@@ -187,37 +255,118 @@ class StatsPage(QDialog):  # Change to QDialog instead of QWidget
         self.total = self.correct + self.incorrect
         self.accuracy = (self.correct / self.total * 100) if self.total > 0 else 0
 
-        # 🔹 Blok Kiri (Statistik Utama)
+        # Main stats box with gradient background
         main_stats_box = QGroupBox("📊 Statistik Utama")
+        main_stats_box.setStyleSheet("""
+            QGroupBox {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #ffffff, stop:1 #f0f8ff);
+                padding: 15px;
+                margin: 10px;
+            }
+        """)
+        
         main_stats_layout = QVBoxLayout()
-        main_stats_layout.addWidget(QLabel(f"✅ Jawaban Benar: {self.correct}"))
-        main_stats_layout.addWidget(QLabel(f"❌ Jawaban Salah: {self.incorrect}"))
-        main_stats_layout.addWidget(QLabel(f"🔄 Total Pertanyaan: {self.total}"))
-        main_stats_layout.addWidget(QLabel(f"📈 Akurasi: {self.accuracy:.2f}%"))
+        stats_labels = [
+            (f"✅ Jawaban Benar: {self.correct}", "#27ae60"),
+            (f"❌ Jawaban Salah: {self.incorrect}", "#c0392b"),
+            (f"🔄 Total Pertanyaan: {self.total}", "#2980b9"),
+            (f"📈 Akurasi: {self.accuracy:.2f}%", self._get_accuracy_color())
+        ]
+        
+        for text, color in stats_labels:
+            label = QLabel(text)
+            label.setStyleSheet(f"""
+                QLabel {{
+                    color: {color};
+                    font-size: 15px;
+                    font-weight: bold;
+                    padding: 10px;
+                    background-color: rgba(255, 255, 255, 0.7);
+                    border-radius: 5px;
+                    margin: 2px;
+                }}
+            """)
+            main_stats_layout.addWidget(label)
+        
         main_stats_box.setLayout(main_stats_layout)
 
-        # 🔹 Blok Kanan (Detail Tambahan)
+        # Extra stats box
         extra_stats_box = QGroupBox("📂 Detail Tambahan")
+        extra_stats_box.setStyleSheet("""
+            QGroupBox {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #ffffff, stop:1 #fff0f5);
+                padding: 15px;
+                margin: 10px;
+            }
+        """)
+        
         extra_stats_layout = QVBoxLayout()
-        extra_stats_layout.addWidget(QLabel(f"🎯 Skor Sesi Terakhir: {last_session_score}%"))
-        extra_stats_layout.addWidget(QLabel(f"⏳ Total Waktu Belajar: {total_study_time:.1f} menit"))
+        extra_labels = {
+            (f"🎯 Skor Sesi Terakhir: {last_session_score:.1f}%", "#8e44ad"),
+            (f"⏳ Total Waktu Belajar: {total_study_time:.1f} menit", "#d35400") 
+        }
+        for text, color in extra_labels:
+            label = QLabel(text)
+            label.setStyleSheet(f"""
+                QLabel {{
+                    color: {color};
+                    font-size: 15px;
+                    font-weight: bold;
+                    padding: 10px;
+                    background-color: rgba(255, 255, 255, 0.7);
+                    border-radius: 5px;
+                    margin: 2px;
+                }}
+            """)
+            extra_stats_layout.addWidget(label)
+        
         extra_stats_box.setLayout(extra_stats_layout)
 
-        # 🔹 Tombol Reset Statistik
+        # Reset button with hover effect
         reset_button = QPushButton("🔄 Reset Statistik")
+        reset_button.setStyleSheet("""
+            QPushButton {
+                background-color: #e74c3c;
+                color: white;
+                border: none;
+                padding: 12px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 14px;
+                min-width: 200px;
+                margin: 10px;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+        """)
         reset_button.clicked.connect(self.reset_stats)
 
-        # 🔹 Layout Utama (Menggabungkan Blok Kiri & Kanan)
+        # Layout setup
         main_layout = QHBoxLayout()
         main_layout.addWidget(main_stats_box)
         main_layout.addWidget(extra_stats_box)
 
-        # 🔹 Layout Keseluruhan
         page_layout = QVBoxLayout()
+        page_layout.addWidget(title_label)
         page_layout.addLayout(main_layout)
-        page_layout.addWidget(reset_button)
+        page_layout.addWidget(reset_button, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Add some spacing
+        page_layout.setSpacing(15)
+        page_layout.setContentsMargins(20, 20, 20, 20)
 
         self.setLayout(page_layout)
+
+    def _get_accuracy_color(self):
+        """Return color based on accuracy score"""
+        if self.accuracy >= 80:
+            return "#27ae60"  # Green
+        elif self.accuracy >= 50:
+            return "#f39c12"  # Orange
+        return "#c0392b"  # Red
 
     def reset_stats(self):
         if self.card:
