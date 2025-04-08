@@ -1,6 +1,6 @@
 # Mengimpor modul PyQt6 yang digunakan untuk membuat tampilan UI
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QStackedWidget, QGraphicsOpacityEffect
-from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation
+from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QPropertyAnimation
 from PyQt6.QtGui import QPixmap
 
 # Kelas FlashcardDisplay untuk menampilkan kartu flashcard di tengah aplikasi
@@ -79,12 +79,37 @@ class FlashcardDisplay(QWidget):
         
         self.setLayout(layout)
         self.setStyleSheet("background-color: #FFC300;")
+        
+        self.init_slide_animations()
 
     def init_animation(self):
         self.opacity_effect = QGraphicsOpacityEffect(self.card_content)
         self.card_content.setGraphicsEffect(self.opacity_effect)
         self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
     
+    def animate_card_transition(self):
+        self.animation.stop()
+        self.animation.setDuration(500)
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(1.0)
+        self.animation.start()
+
+    def init_slide_animations(self):
+        self.pos_animation = QPropertyAnimation(self.card_content, b"pos")
+        self.pos_animation.setDuration(500)
+        self.pos_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+    
+    def animate_slide(self, direction):
+        original_pos = self.card_content.pos()
+        
+        start_x = -direction * self.width()
+        self.card_content.move(start_x, original_pos.y())
+        
+        self.pos_animation.stop()
+        self.pos_animation.setStartValue(self.card_content.pos())
+        self.pos_animation.setEndValue(original_pos)
+        self.pos_animation.start()
+
     def set_deck(self, deck):
         """Mengatur dek yang sedang digunakan dan memperbarui tampilan"""
         self.current_deck = deck    # Menyimpan dek aktif
@@ -109,6 +134,7 @@ class FlashcardDisplay(QWidget):
                 self.card_content.setText(card.front)
             else:
                 self.card_content.setText(card.back)
+                self.card_content.move(0, self.card_content.y())
             return card
         return None
     
@@ -130,6 +156,7 @@ class FlashcardDisplay(QWidget):
         if self.current_deck and self.current_deck.flashcards:
             self.current_index = (self.current_index + 1) % len(self.current_deck.flashcards)
             self.showing_front = True
+            self.animate_slide(1)
             card = self.update_card_display()
             self.cardChanged.emit(self.current_index, self.showing_front)
             return self.current_index, self.showing_front, card
@@ -140,6 +167,7 @@ class FlashcardDisplay(QWidget):
         if self.current_deck and self.current_deck.flashcards:
             self.current_index = (self.current_index - 1) % len(self.current_deck.flashcards)
             self.showing_front = True
+            self.animate_slide(-1)
             card = self.update_card_display()
             self.cardChanged.emit(self.current_index, self.showing_front)
             return self.current_index, self.showing_front, card
@@ -161,28 +189,4 @@ class FlashcardDisplay(QWidget):
         self.card_stack.setCurrentIndex(0)
         self.title_label.setText("Select a Deck")
     
-    def animate_card_transition(self):
-        self.animation.stop()
-        self.animation.setDuration(300)
-        self.animation.setStartValue(0.0)
-        self.animation.setEndValue(1.0)
-        self.animation.start()
-
-
-def get_styles():
-    return {
-        "deck_list": """
-            background-color: #4A90E2;  /* Biru cerah */
-            color: white;
-            font-size: 14px;
-            border-radius: 8px;
-            padding: 5px;
-        """,
-        "notes_panel": """
-            background-color: #50C878;  /* Hijau segar */
-            color: white;
-            font-size: 14px;
-            border-radius: 8px;
-            padding: 10px;
-        """
-    }
+    
