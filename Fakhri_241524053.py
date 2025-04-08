@@ -1,6 +1,6 @@
 # Mengimpor modul PyQt6 yang digunakan untuk membuat tampilan UI
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QStackedWidget
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QStackedWidget, QGraphicsOpacityEffect
+from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation
 from PyQt6.QtGui import QPixmap
 
 # Kelas FlashcardDisplay untuk menampilkan kartu flashcard di tengah aplikasi
@@ -16,7 +16,7 @@ class FlashcardDisplay(QWidget):
         self.showing_front = True   # Menandai apakah sisi depan kartu ditampilkan
         self.notes_visible = False  # Menyimpan status tampilan catatan
         self.init_ui()  # Memanggil metode untuk inisialisasi tampilan UI
-        
+
     def init_ui(self):
         """Menginisialisasi tampilan UI"""
         layout = QVBoxLayout()  # Membuat layout vertikal untuk widget
@@ -60,6 +60,9 @@ class FlashcardDisplay(QWidget):
             font-size: 16px;
             min-height: 200px;
         """)    # Desain/gaya tampilan kartu
+
+        self.init_animation()
+
         self.card_content.setWordWrap(True)
         card_layout.addWidget(self.card_content, 1)
 
@@ -76,6 +79,11 @@ class FlashcardDisplay(QWidget):
         
         self.setLayout(layout)
         self.setStyleSheet("background-color: #FFC300;")
+
+    def init_animation(self):
+        self.opacity_effect = QGraphicsOpacityEffect(self.card_content)
+        self.card_content.setGraphicsEffect(self.opacity_effect)
+        self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
     
     def set_deck(self, deck):
         """Mengatur dek yang sedang digunakan dan memperbarui tampilan"""
@@ -106,8 +114,13 @@ class FlashcardDisplay(QWidget):
     
     def flip_card(self):
         """Membalik flashcard antara sisi depan dan belakang"""
+        if not self.current_deck:
+            return
         self.showing_front = not self.showing_front
         card = self.update_card_display()
+
+        self.animate_card_transition()
+
         # Emit signal to inform about card flip
         self.cardFlipped.emit(not self.showing_front)
         return self.showing_front, card
@@ -147,6 +160,13 @@ class FlashcardDisplay(QWidget):
         """Menampilkan layar sambutan saat tidak ada dek yang dipilih"""
         self.card_stack.setCurrentIndex(0)
         self.title_label.setText("Select a Deck")
+    
+    def animate_card_transition(self):
+        self.animation.stop()
+        self.animation.setDuration(300)
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(1.0)
+        self.animation.start()
 
 
 def get_styles():
