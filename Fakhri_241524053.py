@@ -156,7 +156,7 @@ class FlashcardDisplay(QWidget):
         if self.current_deck and self.current_deck.flashcards:
             self.current_index = (self.current_index + 1) % len(self.current_deck.flashcards)
             self.showing_front = True
-            self.animate_slide(1)
+            self.animate_slide(-1)
             card = self.update_card_display()
             self.cardChanged.emit(self.current_index, self.showing_front)
             return self.current_index, self.showing_front, card
@@ -167,7 +167,7 @@ class FlashcardDisplay(QWidget):
         if self.current_deck and self.current_deck.flashcards:
             self.current_index = (self.current_index - 1) % len(self.current_deck.flashcards)
             self.showing_front = True
-            self.animate_slide(-1)
+            self.animate_slide(1)
             card = self.update_card_display()
             self.cardChanged.emit(self.current_index, self.showing_front)
             return self.current_index, self.showing_front, card
