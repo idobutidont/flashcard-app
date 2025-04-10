@@ -1,5 +1,5 @@
 import os, json, uuid
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox)
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 
 # TODO: Proper Docstring and code comments
@@ -366,3 +366,46 @@ class ManageCardsDialog(QDialog):
             
             # Return True to tell that the deck was modified
             self.setResult(QDialog.DialogCode.Accepted)
+
+
+# Deck Editor Window
+class RenameDeckDialog(QDialog):
+    def __init__(self, deck, parent=None):
+        super().__init__(parent)
+        self.deck = deck
+        self.data_manager = DataManager()
+        self.init_ui()
+        
+    def init_ui(self):
+        self.setWindowTitle("Edit Deck Properties")
+        self.setMinimumWidth(300)
+        layout = QFormLayout()
+        
+        # Deck name field
+        self.name_edit = QLineEdit(self.deck.name)
+        layout.addRow("Deck Name:", self.name_edit)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        self.save_btn = QPushButton("Save Changes")
+        self.save_btn.clicked.connect(self.accept)
+        btn_layout.addWidget(self.cancel_btn)
+        btn_layout.addWidget(self.save_btn)
+        layout.addRow(btn_layout)
+        
+        self.setLayout(layout)
+    
+    def get_deck_data(self):
+        return {
+            "name": self.name_edit.text().strip()
+        }
+    
+    def accept(self):
+        new_name = self.get_deck_data()["name"]
+        
+        if new_name and new_name != self.deck.name:
+            self.data_manager.delete_deck(self.deck.name)
+            self.deck.name = new_name
+        super().accept()
