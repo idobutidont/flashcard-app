@@ -368,7 +368,7 @@ class ManageCardsDialog(QDialog):
             self.setResult(QDialog.DialogCode.Accepted)
 
 
-# Deck Editor Window
+# Deck Rename Window
 class RenameDeckDialog(QDialog):
     def __init__(self, deck, parent=None):
         super().__init__(parent)
