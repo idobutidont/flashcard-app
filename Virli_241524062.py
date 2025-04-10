@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel)
+from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 
-from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog
+from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog
 from Zein_241524056 import StatsManager, StatsPage
 from Lukman_241524050 import NotesPanel, NotesManager
 from Fakhri_241524053 import FlashcardDisplay
@@ -23,12 +23,14 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         self.deck_list = QListWidget()
         layout.addWidget(self.deck_list)
         
-        # Tombol untuk menambah dan menghapus deck 
+        # Tombol untuk menambah, menghapus, dan rename deck 
         self.add_deck_btn = QPushButton("Add New Deck")
         self.delete_deck_btn = QPushButton("Delete Deck")
+        self.edit_deck_btn = QPushButton("Rename Deck")
         
         layout.addWidget(self.add_deck_btn)
         layout.addWidget(self.delete_deck_btn)
+        layout.addWidget(self.edit_deck_btn)
         
         self.setLayout(layout)  # Untuk mengatur layout utama 
     
@@ -167,6 +169,7 @@ class FlashcardApp(QMainWindow):
         # Deck panel signals
         self.deck_panel.add_deck_btn.clicked.connect(self.add_deck)
         self.deck_panel.delete_deck_btn.clicked.connect(self.delete_deck)
+        self.deck_panel.edit_deck_btn.clicked.connect(self.edit_deck)
         self.deck_panel.deck_list.itemClicked.connect(self.select_deck)
 
         # Flashcard navigation signals
@@ -240,6 +243,21 @@ class FlashcardApp(QMainWindow):
                 
                 # Sembunyikan tombol saat tidak ada dek yang dipilih
                 self.update_button_visibility(False)
+
+    def edit_deck(self):
+        deck_name = self.deck_panel.get_selected_deck_name()
+        if not deck_name:
+            return
+
+        for deck in self.decks:
+            if deck.name == deck_name:
+                dialog = RenameDeckDialog(deck, self)
+                if dialog.exec():
+                    deck_data = dialog.get_deck_data()
+                    deck.name = deck_data["name"]
+                    self.data_manager.save_deck(deck)
+                    self.deck_panel.populate_decks(self.decks)
+                break
 
     def select_deck(self):
         deck_name = self.deck_panel.get_selected_deck_name()
