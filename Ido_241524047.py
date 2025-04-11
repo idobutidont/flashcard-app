@@ -2,8 +2,6 @@ import os, json, uuid
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 
-# TODO: Proper Docstring and code comments
-
 
 # Flashcard (Middle Panel)
 class Flashcard:
@@ -57,31 +55,19 @@ class Deck:
         self.flashcards = flashcards if flashcards else []
     
     def add_flashcard(self, front, back, notes=""):
-        """
-        
-        """
         card = Flashcard(front, back, notes)
         self.flashcards.append(card)
         return card
     
     def remove_flashcard(self, card_id):
-        """
-        
-        """
         self.flashcards = [card for card in self.flashcards if card.id != card_id]
     
     def get_flashcard(self, index):
-        """
-        
-        """
         if 0 <= index < len(self.flashcards):
             return self.flashcards[index]
         return None
     
     def to_dict(self):
-        """
-        
-        """
         return {
             "name": self.name,
             "study_time": self.study_time,
@@ -90,9 +76,6 @@ class Deck:
     
     @classmethod
     def from_dict(cls, data):
-        """
-        
-        """
         flashcards = [Flashcard.from_dict(card_data) for card_data in data.get("flashcards", [])]
         return cls(name=data.get("name", ""), study_time=data.get("study_time", ""), flashcards=flashcards)
 
@@ -104,17 +87,11 @@ class DataManager:
         os.makedirs(self.data_dir, exist_ok=True)
     
     def save_deck(self, deck):
-        """
-        
-        """
         deck_path = os.path.join(self.data_dir, f"{deck.name}.txt")
         with open(deck_path, 'w') as f:
             json.dump(deck.to_dict(), f, indent=2)
     
     def load_decks(self):
-        """
-        
-        """
         decks = []
         if not os.path.exists(self.data_dir):
             return decks
@@ -132,9 +109,6 @@ class DataManager:
         return decks
     
     def delete_deck(self, deck_name):
-        """
-        
-        """
         deck_path = os.path.join(self.data_dir, f"{deck_name}.txt")
         if os.path.exists(deck_path):
             os.remove(deck_path)
@@ -295,6 +269,7 @@ class ManageCardsDialog(QDialog):
         
         self.setLayout(layout)
     
+    # Refresh card list when it's updated
     def populate_cards(self):
         self.card_list.clear()
         for card in self.deck.flashcards:
