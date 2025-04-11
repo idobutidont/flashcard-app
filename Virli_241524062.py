@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 
 from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog
 from Zein_241524056 import StatsManager, StatsPage
@@ -48,6 +49,7 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
 class FlashcardApp(QMainWindow): 
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon("images/icon.png"))
         self.data_manager = DataManager() # Objek mengelola data 
         self.decks = []  # Untuk menyimpan daftar deck 
         self.current_deck = None  # Menyimpan deck yang sedang di pilih
