@@ -1,11 +1,15 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
+from datetime import datetime
 
 from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog
 from Zein_241524056 import StatsManager, StatsPage
 from Lukman_241524050 import NotesPanel, NotesManager
 from Fakhri_241524053 import FlashcardDisplay
+from Scheduler import Scheduler
+
+
 
 class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
     def __init__(self, parent=None):
@@ -46,13 +50,14 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         return None
 
 # Clas dari aplikasi di flashcard
-class FlashcardApp(QMainWindow): 
-    def __init__(self):
-        super().__init__()
+class FlashcardApp(QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent  # Menyimpan referensi ke LoginWindow (parent)
         self.setWindowIcon(QIcon("images/icon.png"))
-        self.data_manager = DataManager() # Objek mengelola data 
-        self.decks = []  # Untuk menyimpan daftar deck 
-        self.current_deck = None  # Menyimpan deck yang sedang di pilih
+        self.data_manager = DataManager()
+        self.decks = []  # Daftar deck
+        self.current_deck = None  # Deck yang dipilih
         self.init_ui()
         self.load_decks()
         self.stats_manager.start_timer()
@@ -69,7 +74,7 @@ class FlashcardApp(QMainWindow):
         # Untuk membagi tampilan jadi beberapa panel 
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # Membuat panel - panel utama
+        # Membuat panel-panel utama
         self.deck_panel = DeckListPanel()
         self.flashcard_display = FlashcardDisplay()
         self.notes_panel = NotesPanel()
@@ -78,17 +83,17 @@ class FlashcardApp(QMainWindow):
         self.stats_manager = StatsManager()
         self.notes_manager = NotesManager(self.notes_panel)
 
-        # Menambahkan panel daftar deck ke dalam spilitter
+        # Menambahkan panel daftar deck ke dalam splitter
         splitter.addWidget(self.deck_panel)
         
-        # Panel tengah berisi tampilan flashcaard dan kontrol navigasi
+        # Panel tengah berisi tampilan flashcard dan kontrol navigasi
         center_panel = QWidget()
         center_layout = QVBoxLayout()
         
         # Menambahkan tampilan flashcard
-        center_layout.addWidget(self.flashcard_display, 1)  # 1 untuk peregangan untuk nentuin ada berapa banyak ruang yang harus diberikan 
+        center_layout.addWidget(self.flashcard_display, 1)
         
-        # Layout untuk tombol di navigasi 
+        # Layout untuk tombol navigasi
         nav_layout = QHBoxLayout()
         self.prev_btn = QPushButton("Previous")
         self.flip_btn = QPushButton("Flip Card")
@@ -109,34 +114,46 @@ class FlashcardApp(QMainWindow):
         feedback_layout.addWidget(stats_label)
         center_layout.addLayout(feedback_layout)
         
-        # Layout untuk tombol manajemen kartu 
+        # Layout untuk tombol manajemen kartu
         card_mgmt_layout = QHBoxLayout()
         self.add_card_btn = QPushButton("Add New Flashcard")
         self.manage_cards_btn = QPushButton("Manage All Cards")
-        self.stats_btn = QPushButton("View Statistics") # Add stats button
+        self.stats_btn = QPushButton("View Statistics") 
 
         card_mgmt_layout.addWidget(self.add_card_btn)
         card_mgmt_layout.addWidget(self.manage_cards_btn)
-        card_mgmt_layout.addWidget(self.stats_btn) # Add to layout
+        card_mgmt_layout.addWidget(self.stats_btn)
         center_layout.addLayout(card_mgmt_layout)
         
         center_panel.setLayout(center_layout)
         splitter.addWidget(center_panel)
         
-        # Menambahkan catetan ke dalam splitter 
+        # Menambahkan catetan ke dalam splitter
         splitter.addWidget(self.notes_panel)
 
-        # Mengatur ukuran awal masing - masing panel dalam splitter
+        # Mengatur ukuran awal masing-masing panel dalam splitter
         splitter.setSizes([200, 500, 200])
 
         main_layout.addWidget(splitter)
         self.setCentralWidget(main_widget)
 
-        # Menyembunyikan tombol tertentu hingga deck sudah di pilih 
+        # Menyembunyikan tombol tertentu hingga deck sudah dipilih
         self.update_button_visibility(False)
         
-        # Menghubungkan sinyal 
+        # Menghubungkan sinyal
         self.connect_signals()
+
+        # Menambahkan tombol logout
+        self.logout_btn = QPushButton("Logout")
+        self.logout_btn.clicked.connect(self.logout)
+        card_mgmt_layout.addWidget(self.logout_btn)
+
+    def logout(self):
+        confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?")
+        if confirm == QMessageBox.StandardButton.Yes:
+            self.close()  # Menutup FlashcardApp
+            self.parent.show()  # Menampilkan LoginWindow lagi
+
 
     def update_button_visibility(self, has_deck_selected):
         """Mengatur visibilitas tombol berdasarkan apakah ada deck yang dipilih"""
@@ -272,6 +289,8 @@ class FlashcardApp(QMainWindow):
                         self.data_manager.save_deck(self.current_deck)
                     self.current_deck = deck
                     self.stats_manager.set_current_deck(deck)  # Set current deck in StatsManager
+                    self.scheduler.update_learning_rate(deck)
+                    self.flashcard_display.current_index = self.scheduler.get_next_card_index(deck)
                     showing_front, notes_visible = self.flashcard_display.set_deck(deck)
                     
                     # Mengupdate notes dan stats display
@@ -320,12 +339,19 @@ class FlashcardApp(QMainWindow):
         )
 
     def next_card(self):
-        # Panggil saja metode tampilan kartu flash - penanganannya dilakukan di penangan cardChanged
-        self.flashcard_display.next_card()
+        # Panggil metode untuk mendapatkan indeks kartu berikutnya dari scheduler
+        self.flashcard_display.current_index = self.scheduler.get_next_card_index(self.current_deck)
+        self.flashcard_display.showing_front = True
+        card = self.flashcard_display.update_card_display()
+        self.flashcard_display.cardChanged.emit(self.flashcard_display.current_index, self.flashcard_display.showing_front)
 
     def prev_card(self):
-        # Panggil saja metode tampilan kartu flash - penanganannya dilakukan di penangan cardChanged
-        self.flashcard_display.prev_card()
+        # Panggil metode untuk menampilkan kartu sebelumnya
+        if self.current_deck and self.current_deck.flashcards:
+            self.flashcard_display.current_index = (self.flashcard_display.current_index - 1) % len(self.current_deck.flashcards)
+            self.flashcard_display.showing_front = True
+            card = self.flashcard_display.update_card_display()
+            self.flashcard_display.cardChanged.emit(self.flashcard_display.current_index, self.flashcard_display.showing_front)
         
     def handle_card_changed(self, index, showing_front):
         """Handle card changed event from flashcard display"""
@@ -431,12 +457,17 @@ class FlashcardApp(QMainWindow):
             is_right, 
             self.flashcard_display.current_index
         )
-        
-        # Update the feedback buttons
+        card = self.flashcard_display.get_current_card()
+        dialog = RateDifficultyDialog(self)
+        dialog.exec()  # No need to check dialog result since it always saves
+        card.difficulty = dialog.get_difficulty()
+        self.scheduler.schedule_card(card, is_right)
+        self.data_manager.save_deck(self.current_deck)
         self.stats_manager.update_feedback_buttons(
             self.flashcard_display.showing_front,
-            self.flashcard_display.get_current_card()
+            card
         )
+       
 
     def handle_card_feedback(self, card_index, is_right):
         """Handle the card feedback signal"""
@@ -447,6 +478,8 @@ class FlashcardApp(QMainWindow):
         )
             
         if success and self.current_deck:
+            card = self.current_deck.get_flashcard(card_index)
+            self.scheduler.schedule_card(card, is_right)
             self.data_manager.save_deck(self.current_deck)
 
     def show_stats(self):
