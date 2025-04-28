@@ -1,4 +1,3 @@
-import sys
 import os
 import json
 import hashlib
@@ -58,11 +57,11 @@ class LoginWindow(QWidget):
         password = self.password_input.text()
         password_hash = hash_password(password)
 
-        if not os.path.exists("users.json"):
+        if not os.path.exists("data/users.json"):
             QMessageBox.warning(self, "Error", "No users found.")
             return
 
-        with open("users.json", "r") as f:
+        with open("data/users.json", "r") as f:
             users = json.load(f)
 
         if users.get(username) == password_hash:
@@ -80,8 +79,8 @@ class LoginWindow(QWidget):
         password = self.password_input.text()
         password_hash = hash_password(password)
 
-        if os.path.exists("users.json"):
-            with open("users.json", "r") as f:
+        if os.path.exists("data/users.json"):
+            with open("data/users.json", "r") as f:
                 users = json.load(f)
         else:
             users = {}
@@ -90,7 +89,7 @@ class LoginWindow(QWidget):
             QMessageBox.warning(self, "Register", "Username already exists.")
         else:
             users[username] = password_hash
-            with open("users.json", "w") as f:
+            with open("data/users.json", "w") as f:
                 json.dump(users, f)
             QMessageBox.information(self, "Register", "Registration successful.")
             window = FlashcardApp()
