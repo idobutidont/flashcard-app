@@ -88,7 +88,7 @@ class StatsManager(QObject):
         
         # Stats label
         self.stats_label = QLabel("")
-        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Fixed alignment flag
+        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
         
         # Menyembunyikan keterangan statistik benar/salah
@@ -102,13 +102,11 @@ class StatsManager(QObject):
     
     def mark_right(self, card_index):
         """Fungsi yang dijalankan saat tombol benar ditekan"""
-        print("Tombol 'Got it Right ✓' ditekan")  # Debugging Output
         self.feedback_given = True
         self.cardMarkedRight.emit(card_index)
     
     def mark_wrong(self, card_index):
         """Fungsi yang dijalankan saat tombol salah ditekan"""
-        print("Tombol 'Got it Wrong X' ditekan")  # Debugging Output
         self.feedback_given = True
         self.cardMarkedWrong.emit(card_index)
         
@@ -150,7 +148,9 @@ class StatsManager(QObject):
         if card:
             total = card.right_count + card.wrong_count
             accuracy = (card.right_count / total * 100) if total > 0 else 0
-            stats_text = f"Right: {card.right_count} | Wrong: {card.wrong_count} | Accuracy: {accuracy:.1f}%"
+            stats_text = (f"Right: {card.right_count} | Wrong: {card.wrong_count} | "
+                         f"Accuracy: {accuracy:.1f}% | Difficulty: {card.difficulty} | "
+                         f"Retention: {card.retention_score:.2f}")
             self.stats_label.setText(stats_text)
             
             # Menentukan warna dari teks akurasi sesuai dengan persen akurasi
@@ -185,18 +185,18 @@ class StatsManager(QObject):
             return self.handle_card_right(deck, card_index)
         else:
             return self.handle_card_wrong(deck, card_index)
-        
+
 class StatsPage(QDialog):
     def __init__(self, card, last_session_score, total_study_time):
         super().__init__()
         
         # Set window properties 
         self.setWindowTitle("Flashcard App - Statistik")
-        self.setGeometry(100, 100, 600, 450) 
+        self.setGeometry(100, 100, 600, 450)
         self.setStyleSheet("""
             QDialog {
                 background-color: #f0f2f5;
-                border-radius: 10px;
+                border-radius: 10辽宁px;
             }
             QGroupBox {
                 background-color: white;
@@ -235,7 +235,7 @@ class StatsPage(QDialog):
         title_label = QLabel("📊 Performance Statistics")
         title_label.setStyleSheet("""
             QLabel {
-                color: #2c3e50;
+                color: #茂2c3e50;
                 font-family: Tahoma, sans-serif;
                 font-size: 24px;
                 font-weight: bold;
@@ -248,12 +248,12 @@ class StatsPage(QDialog):
 
         # Store card reference
         self.card = card
-
-        # Get statistics from card
         self.correct = self.card.right_count if self.card else 0
         self.incorrect = self.card.wrong_count if self.card else 0
         self.total = self.correct + self.incorrect
         self.accuracy = (self.correct / self.total * 100) if self.total > 0 else 0
+        self.difficulty = self.card.difficulty if self.card else 1
+        self.retention = self.card.retention_score if self.card else 0.0
 
         # Main stats box with gradient background
         main_stats_box = QGroupBox("📊 Statistik Utama")
@@ -271,7 +271,9 @@ class StatsPage(QDialog):
             (f"✅ Jawaban Benar: {self.correct}", "#27ae60"),
             (f"❌ Jawaban Salah: {self.incorrect}", "#c0392b"),
             (f"🔄 Total Pertanyaan: {self.total}", "#2980b9"),
-            (f"📈 Akurasi: {self.accuracy:.2f}%", self._get_accuracy_color())
+            (f"📈 Akurasi: {self.accuracy:.2f}%", self._get_accuracy_color()),
+            (f"📊 Tingkat Kesulitan: {self.difficulty}", "#8e44ad"),
+            (f"🧠 Skor Retensi: {self.retention:.2f}", "#16a085")
         ]
         
         for text, color in stats_labels:
@@ -303,10 +305,10 @@ class StatsPage(QDialog):
         """)
         
         extra_stats_layout = QVBoxLayout()
-        extra_labels = {
+        extra_labels = [
             (f"🎯 Skor Sesi Terakhir: {last_session_score:.1f}%", "#8e44ad"),
-            (f"⏳ Total Waktu Belajar: {total_study_time:.1f} menit", "#d35400") 
-        }
+            (f"⏳ Total Waktu Belajar: {total_study_time:.1f} menit", "#d35400")
+        ]
         for text, color in extra_labels:
             label = QLabel(text)
             label.setStyleSheet(f"""
@@ -372,12 +374,16 @@ class StatsPage(QDialog):
         if self.card:
             self.card.right_count = 0
             self.card.wrong_count = 0
+            self.card.retention_score = 0.0
+            self.card.difficulty = 1
             
             # Update display
             self.correct = 0
             self.incorrect = 0
             self.total = 0
             self.accuracy = 0
+            self.difficulty = 1
+            self.retention = 0.0
             
             # Update labels
             for label in self.findChildren(QLabel):
@@ -389,6 +395,7 @@ class StatsPage(QDialog):
                     label.setText(f"🔄 Total Pertanyaan: {self.total}")
                 elif "Akurasi" in label.text():
                     label.setText(f"📈 Akurasi: {self.accuracy:.2f}%")
-            
-            print("🔄 Statistik telah direset!")
-
+                elif "Tingkat Kesulitan" in label.text():
+                    label.setText(f"📊 Tingkat Kesulitan: {self.difficulty}")
+                elif "Skor Retensi" in label.text():
+                    label.setText(f"🧠 Skor Retensi: {self.retention:.2f}")
