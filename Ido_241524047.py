@@ -1,11 +1,12 @@
 import os, json, uuid
+from datetime import datetime
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox, QFormLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 
 
 # Flashcard (Middle Panel)
 class Flashcard:
-    def __init__(self, front="", back="", notes="", id=None, right_count=0, wrong_count=0):
+    def __init__(self, front="", back="", notes="", id=None, right_count=0, wrong_count=0, difficulty=1, retention_score=0.0, last_reviewed=None, next_review=None):
         """
         Initialize a new flashcard.
         """
@@ -15,6 +16,10 @@ class Flashcard:
         self.id = id if id is not None else str(uuid.uuid4())
         self.right_count = right_count
         self.wrong_count = wrong_count
+        self.difficulty = difficulty
+        self.retention_score = retention_score
+        self.last_reviewed = last_reviewed if last_reviewed else datetime.now().isoformat()
+        self.next_review = next_review if next_review else datetime.now().isoformat()
     
     def to_dict(self):
         """
@@ -26,7 +31,11 @@ class Flashcard:
             "back": self.back,
             "notes": self.notes,
             "right_count": self.right_count,
-            "wrong_count": self.wrong_count
+            "wrong_count": self.wrong_count,
+            "difficulty": self.difficulty,
+            "retention_score": self.retention_score,
+            "last_reviewed": self.last_reviewed,
+            "next_review": self.next_review
         }
     
     @classmethod
@@ -40,7 +49,11 @@ class Flashcard:
             notes=data.get("notes", ""),
             id=data.get("id"),
             right_count=data.get("right_count", 0),
-            wrong_count=data.get("wrong_count", 0)
+            wrong_count=data.get("wrong_count", 0),
+            difficulty=data.get("difficulty", 1),
+            retention_score=data.get("retention_score", 0.0),
+            last_reviewed=data.get("last_reviewed", datetime.now().isoformat()),
+            next_review=data.get("next_review", datetime.now().isoformat())
         )
 
 
@@ -120,6 +133,8 @@ class DataManager:
 class AddCardDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.selected_difficulty = 1
+        self.difficulty_buttons = []
         self.init_ui()
         
     def init_ui(self):
@@ -145,6 +160,33 @@ class AddCardDialog(QDialog):
         self.notes_text = QTextEdit()
         layout.addWidget(self.notes_text)
         
+        # Difficulty rating
+        layout.addWidget(QLabel("Difficulty (1=Easy, 5=Hard):"))
+        difficulty_layout = QHBoxLayout()
+        for i in range(1, 6):
+            btn = QPushButton(str(i))
+            btn.setFixedSize(40, 40)
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #e0e0e0;
+                    border-radius: 20px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #d0d0d0;
+                }
+                QPushButton:checked {
+                    background-color: #3498db;
+                    color: white;
+                }
+            """)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked, idx=i: self.select_difficulty(idx))
+            self.difficulty_buttons.append(btn)
+            difficulty_layout.addWidget(btn)
+        self.difficulty_buttons[0].setChecked(True)  # Default to 1
+        layout.addLayout(difficulty_layout)
+        
         # Buttons
         btn_layout = QHBoxLayout()
         self.cancel_btn = QPushButton("Cancel")
@@ -158,11 +200,18 @@ class AddCardDialog(QDialog):
         
         self.setLayout(layout)
     
+    def select_difficulty(self, difficulty):
+        self.selected_difficulty = difficulty
+        for btn in self.difficulty_buttons:
+            btn.setChecked(False)
+        self.difficulty_buttons[difficulty-1].setChecked(True)
+    
     def get_card_data(self):
         return {
             "front": self.front_text.toPlainText(),
             "back": self.back_text.toPlainText(),
-            "notes": self.notes_text.toPlainText()
+            "notes": self.notes_text.toPlainText(),
+            "difficulty": self.selected_difficulty
         }
 
 
@@ -171,6 +220,8 @@ class EditCardDialog(QDialog):
     def __init__(self, card, parent=None):
         super().__init__(parent)
         self.card = card
+        self.selected_difficulty = card.difficulty
+        self.difficulty_buttons = []
         self.init_ui()
         
     def init_ui(self):
@@ -199,6 +250,33 @@ class EditCardDialog(QDialog):
         self.notes_text.setText(self.card.notes)
         layout.addWidget(self.notes_text)
         
+        # Difficulty rating
+        layout.addWidget(QLabel("Difficulty (1=Easy, 5=Hard):"))
+        difficulty_layout = QHBoxLayout()
+        for i in range(1, 6):
+            btn = QPushButton(str(i))
+            btn.setFixedSize(40, 40)
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #e0e0e0;
+                    border-radius: 20px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #d0d0d0;
+                }
+                QPushButton:checked {
+                    background-color: #3498db;
+                    color: white;
+                }
+            """)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked, idx=i: self.select_difficulty(idx))
+            self.difficulty_buttons.append(btn)
+            difficulty_layout.addWidget(btn)
+        self.difficulty_buttons[self.card.difficulty-1].setChecked(True)
+        layout.addLayout(difficulty_layout)
+        
         # Buttons
         btn_layout = QHBoxLayout()
         self.cancel_btn = QPushButton("Cancel")
@@ -212,11 +290,18 @@ class EditCardDialog(QDialog):
         
         self.setLayout(layout)
     
+    def select_difficulty(self, difficulty):
+        self.selected_difficulty = difficulty
+        for btn in self.difficulty_buttons:
+            btn.setChecked(False)
+        self.difficulty_buttons[difficulty-1].setChecked(True)
+    
     def get_card_data(self):
         return {
             "front": self.front_text.toPlainText(),
             "back": self.back_text.toPlainText(),
-            "notes": self.notes_text.toPlainText()
+            "notes": self.notes_text.toPlainText(),
+            "difficulty": self.selected_difficulty
         }
 
 
@@ -273,7 +358,7 @@ class ManageCardsDialog(QDialog):
     def populate_cards(self):
         self.card_list.clear()
         for card in self.deck.flashcards:
-            item = QListWidgetItem(f"Q: {card.front[:30]}{'...' if len(card.front) > 30 else ''}")
+            item = QListWidgetItem(f"Q: {card.front[:30]}{'...' if len(card.front) > 30 else ''} (Difficulty: {card.difficulty})")
             item.setData(Qt.ItemDataRole.UserRole, card.id)
             self.card_list.addItem(item)
     
@@ -288,6 +373,7 @@ class ManageCardsDialog(QDialog):
             new_card = self.deck.add_flashcard(
                 card_data["front"], card_data["back"], card_data["notes"]
             )
+            new_card.difficulty = card_data["difficulty"]
             
             # Update the list
             self.populate_cards()
@@ -314,6 +400,7 @@ class ManageCardsDialog(QDialog):
                 card.front = card_data["front"]
                 card.back = card_data["back"]
                 card.notes = card_data["notes"]
+                card.difficulty = card_data["difficulty"]
                 
                 # Update the list display
                 self.populate_cards()
@@ -342,6 +429,57 @@ class ManageCardsDialog(QDialog):
             # Return True to tell that the deck was modified
             self.setResult(QDialog.DialogCode.Accepted)
 
+# Difficulty Rating Dialog
+class RateDifficultyDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.selected_difficulty = 1
+        self.difficulty_buttons = []
+        self.init_ui()
+        
+    def init_ui(self):
+        self.setWindowTitle("Rate Difficulty")
+        self.setMinimumWidth(300)
+        
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Rate the difficulty of this card (1=Easy, 5=Hard):"))
+        
+        difficulty_layout = QHBoxLayout()
+        for i in range(1, 6):
+            btn = QPushButton(str(i))
+            btn.setFixedSize(40, 40)
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #e0e0e0;
+                    border-radius: 20px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #d0d0d0;
+                }
+                QPushButton:checked {
+                    background-color: #3498db;
+                    color: white;
+                }
+            """)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked, idx=i: self.select_difficulty(idx))
+            self.difficulty_buttons.append(btn)
+            difficulty_layout.addWidget(btn)
+        self.difficulty_buttons[0].setChecked(True)  # Default to 1
+        layout.addLayout(difficulty_layout)
+        
+        self.setLayout(layout)
+    
+    def select_difficulty(self, difficulty):
+        self.selected_difficulty = difficulty
+        for btn in self.difficulty_buttons:
+            btn.setChecked(False)
+        self.difficulty_buttons[difficulty-1].setChecked(True)
+        self.accept()  # Automatically save and close
+    
+    def get_difficulty(self):
+        return self.selected_difficulty
 
 # Deck Rename Window
 class RenameDeckDialog(QDialog):
