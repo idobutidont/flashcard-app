@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from datetime import datetime
 
-from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog
+from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog, RateDifficultyDialog
 from Zein_241524056 import StatsManager, StatsPage
 from Lukman_241524050 import NotesPanel, NotesManager
 from Fakhri_241524053 import FlashcardDisplay
