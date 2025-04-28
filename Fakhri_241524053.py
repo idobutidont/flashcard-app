@@ -131,8 +131,10 @@ class FlashcardDisplay(QWidget):
         card = self.current_deck.get_flashcard(self.current_index)
         if card:
             if self.showing_front:
+                self.card_content.setTextFormat(Qt.TextFormat.RichText)
                 self.card_content.setText(card.front)
             else:
+                self.card_content.setTextFormat(Qt.TextFormat.RichText)
                 self.card_content.setText(card.back)
                 self.card_content.move(0, self.card_content.y())
             return card
