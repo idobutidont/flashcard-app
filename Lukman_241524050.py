@@ -3,7 +3,6 @@ import base64
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QLabel, QPushButton, QHBoxLayout, QFileDialog, QSpinBox, QDialog
 from PyQt6.QtCore import Qt, QBuffer, QByteArray
 from PyQt6.QtGui import QImage 
-from Ido_241524047 import ImageHandler, ImageResizeDialog
 
 # NotesPanel Handling 
 class NotesPanel(QWidget):
