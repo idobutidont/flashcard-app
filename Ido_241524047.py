@@ -1,8 +1,11 @@
-import os, json, uuid
+import os, json, uuid, base64
 from datetime import datetime
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton, QListWidget, QListWidgetItem, QMessageBox, QFormLayout, QLineEdit)
-from PyQt6.QtCore import Qt
-
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, 
+                             QTextEdit, QPushButton, QListWidget, QListWidgetItem, 
+                             QMessageBox, QFormLayout, QLineEdit, QSpinBox, QGroupBox)
+from PyQt6.QtCore import Qt, QBuffer, QByteArray
+from PyQt6.QtGui import QImage
+from Lukman_241524050 import ImageHandler, ImageResizeDialog
 
 # Flashcard (Middle Panel)
 class Flashcard:
@@ -20,7 +23,11 @@ class Flashcard:
         self.retention_score = retention_score
         self.last_reviewed = last_reviewed if last_reviewed else datetime.now().isoformat()
         self.next_review = next_review if next_review else datetime.now().isoformat()
-    
+        self.front_images = {}
+        self.back_images = {}
+        self.notes_images = {}
+
+
     def to_dict(self):
         """
         Store flashcard data as a dictionary.
@@ -35,7 +42,10 @@ class Flashcard:
             "difficulty": self.difficulty,
             "retention_score": self.retention_score,
             "last_reviewed": self.last_reviewed,
-            "next_review": self.next_review
+            "next_review": self.next_review, 
+            "front_images": self.front_images, 
+            "back_images": self.back_images, 
+            "notes_images": self.notes_images 
         }
     
     @classmethod
@@ -55,7 +65,10 @@ class Flashcard:
             last_reviewed=data.get("last_reviewed", datetime.now().isoformat()),
             next_review=data.get("next_review", datetime.now().isoformat())
         )
-
+        flashcard.front_images = data.get("front_images", {})
+        flashcard.back_images = data.get("back_images", {})
+        flashcard.notes_images = data.get("notes_images", {})
+        return flashcard
 
 # Deck (Left Panel)
 class Deck:
@@ -139,26 +152,47 @@ class AddCardDialog(QDialog):
         
     def init_ui(self):
         self.setWindowTitle("Add New Flashcard")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(600)
         
         layout = QVBoxLayout()
         
         # Front of card
-        layout.addWidget(QLabel("Front (Question):"))
+        front_group = QGroupBox("Front (Question)")
+        front_layout = QVBoxLayout()
         self.front_text = QTextEdit()
         self.front_text.setMaximumHeight(100)
-        layout.addWidget(self.front_text)
+        self.front_text.setAcceptRichText(True)
+        self.insert_front_image_btn = QPushButton("Insert Image")
+        self.insert_front_image_btn.clicked.connect(lambda: self.insert_image(self.front_text))
+        front_layout.addWidget(self.front_text)
+        front_layout.addWidget(self.insert_front_image_btn)
+        front_group.setLayout(front_layout)
+        layout.addWidget(front_group)
         
         # Back of card
-        layout.addWidget(QLabel("Back (Answer):"))
+        back_group = QGroupBox("Back (Answer)")
+        back_layout = QVBoxLayout()
         self.back_text = QTextEdit()
         self.back_text.setMaximumHeight(100)
-        layout.addWidget(self.back_text)
+        self.back_text.setAcceptRichText(True)
+        self.insert_back_image_btn = QPushButton("Insert Image")
+        self.insert_back_image_btn.clicked.connect(lambda: self.insert_image(self.back_text))
+        back_layout.addWidget(self.back_text)
+        back_layout.addWidget(self.insert_back_image_btn)
+        back_group.setLayout(back_layout)
+        layout.addWidget(back_group)
         
         # Pre-defined Notes (optional) if the user wants it beforehand
-        layout.addWidget(QLabel("Notes (Optional):"))
+        notes_group = QGroupBox("Notes (Optional)")
+        notes_layout = QVBoxLayout()
         self.notes_text = QTextEdit()
-        layout.addWidget(self.notes_text)
+        self.notes_text.setAcceptRichText(True)
+        self.insert_notes_image_btn = QPushButton("Insert Image")
+        self.insert_notes_image_btn.clicked.connect(lambda: self.insert_image(self.notes_text))
+        notes_layout.addWidget(self.notes_text)
+        notes_layout.addWidget(self.insert_notes_image_btn)
+        notes_group.setLayout(notes_layout)
+        layout.addWidget(notes_group)
         
         # Difficulty rating
         layout.addWidget(QLabel("Difficulty (1=Easy, 5=Hard):"))
@@ -199,7 +233,24 @@ class AddCardDialog(QDialog):
         layout.addLayout(btn_layout)
         
         self.setLayout(layout)
-    
+
+    def insert_image(self, text_edit):
+        image = ImageHandler.load_image_from_file(self)
+        if image:
+            # Resize dialog
+            dialog = ImageResizeDialog(image.width(), image.height(), self)
+            if dialog.exec():
+                new_width, new_height = dialog.get_new_size()
+                resized_image = ImageHandler.resize_image(image, new_width, new_height)
+                
+                # Convert to base64 for storage
+                base64_str = ImageHandler.image_to_base64(resized_image)
+                
+                # Insert into text edit
+                cursor = text_edit.textCursor()
+                cursor.insertHtml(f'<img src="data:image/png;base64,{base64_str}">')
+                text_edit.setTextCursor(cursor)
+
     def select_difficulty(self, difficulty):
         self.selected_difficulty = difficulty
         for btn in self.difficulty_buttons:
@@ -208,9 +259,9 @@ class AddCardDialog(QDialog):
     
     def get_card_data(self):
         return {
-            "front": self.front_text.toPlainText(),
-            "back": self.back_text.toPlainText(),
-            "notes": self.notes_text.toPlainText(),
+            "front": self.front_text.toHtml(),
+            "back": self.back_text.toHtml(),
+            "notes": self.notes_text.toHtml(),
             "difficulty": self.selected_difficulty
         }
 
@@ -226,29 +277,50 @@ class EditCardDialog(QDialog):
         
     def init_ui(self):
         self.setWindowTitle("Edit Flashcard")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(600)
         
         layout = QVBoxLayout()
         
         # Front of card
-        layout.addWidget(QLabel("Front (Question):"))
+        front_group = QGroupBox("Front (Question)")
+        front_layout = QVBoxLayout()
         self.front_text = QTextEdit()
         self.front_text.setMaximumHeight(100)
-        self.front_text.setText(self.card.front)
-        layout.addWidget(self.front_text)
+        self.front_text.setAcceptRichText(True)
+        self.front_text.setHtml(self.card.front)
+        self.insert_front_image_btn = QPushButton("Insert Image")
+        self.insert_front_image_btn.clicked.connect(lambda: self.insert_image(self.front_text))
+        front_layout.addWidget(self.front_text)
+        front_layout.addWidget(self.insert_front_image_btn)
+        front_group.setLayout(front_layout)
+        layout.addWidget(front_group)
         
         # Back of card
-        layout.addWidget(QLabel("Back (Answer):"))
+        back_group = QGroupBox("Back (Answer)")
+        back_layout = QVBoxLayout()
         self.back_text = QTextEdit()
         self.back_text.setMaximumHeight(100)
-        self.back_text.setText(self.card.back)
-        layout.addWidget(self.back_text)
+        self.back_text.setAcceptRichText(True)
+        self.back_text.setHtml(self.card.back)
+        self.insert_back_image_btn = QPushButton("Insert Image")
+        self.insert_back_image_btn.clicked.connect(lambda: self.insert_image(self.back_text))
+        back_layout.addWidget(self.back_text)
+        back_layout.addWidget(self.insert_back_image_btn)
+        back_group.setLayout(back_layout)
+        layout.addWidget(back_group)
         
         # Notes
-        layout.addWidget(QLabel("Notes (Optional):"))
+        notes_group = QGroupBox("Notes (Optional)")
+        notes_layout = QVBoxLayout()
         self.notes_text = QTextEdit()
-        self.notes_text.setText(self.card.notes)
-        layout.addWidget(self.notes_text)
+        self.notes_text.setAcceptRichText(True)
+        self.notes_text.setHtml(self.card.notes)
+        self.insert_notes_image_btn = QPushButton("Insert Image")
+        self.insert_notes_image_btn.clicked.connect(lambda: self.insert_image(self.notes_text))
+        notes_layout.addWidget(self.notes_text)
+        notes_layout.addWidget(self.insert_notes_image_btn)
+        notes_group.setLayout(notes_layout)
+        layout.addWidget(notes_group)
         
         # Difficulty rating
         layout.addWidget(QLabel("Difficulty (1=Easy, 5=Hard):"))
@@ -290,6 +362,24 @@ class EditCardDialog(QDialog):
         
         self.setLayout(layout)
     
+    def insert_image(self, text_edit):
+        """Insert image into the specified text edit"""
+        image = ImageHandler.load_image_from_file(self)
+        if image:
+            # Resize dialog
+            dialog = ImageResizeDialog(image.width(), image.height(), self)
+            if dialog.exec():
+                new_width, new_height = dialog.get_new_size()
+                resized_image = ImageHandler.resize_image(image, new_width, new_height)
+                
+                # Convert to base64 for storage
+                base64_str = ImageHandler.image_to_base64(resized_image)
+                
+                # Insert into text edit
+                cursor = text_edit.textCursor()
+                cursor.insertHtml(f'<img src="data:image/png;base64,{base64_str}">')
+                text_edit.setTextCursor(cursor)
+
     def select_difficulty(self, difficulty):
         self.selected_difficulty = difficulty
         for btn in self.difficulty_buttons:
@@ -298,9 +388,9 @@ class EditCardDialog(QDialog):
     
     def get_card_data(self):
         return {
-            "front": self.front_text.toPlainText(),
-            "back": self.back_text.toPlainText(),
-            "notes": self.notes_text.toPlainText(),
+            "front": self.front_text.toHtml(),
+            "back": self.back_text.toHtml(),
+            "notes": self.notes_text.toHtml(),
             "difficulty": self.selected_difficulty
         }
 
@@ -358,7 +448,13 @@ class ManageCardsDialog(QDialog):
     def populate_cards(self):
         self.card_list.clear()
         for card in self.deck.flashcards:
-            item = QListWidgetItem(f"Q: {card.front[:30]}{'...' if len(card.front) > 30 else ''} (Difficulty: {card.difficulty})")
+            # Extract plain text from HTML
+            from PyQt6.QtGui import QTextDocument
+            doc = QTextDocument()
+            doc.setHtml(card.front)
+            plain_text = doc.toPlainText()
+            
+            item = QListWidgetItem(f"Q: {plain_text[:30]}{'...' if len(plain_text) > 30 else ''} (Difficulty: {card.difficulty})")
             item.setData(Qt.ItemDataRole.UserRole, card.id)
             self.card_list.addItem(item)
     
