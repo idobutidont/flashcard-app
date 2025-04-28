@@ -291,7 +291,6 @@ class FlashcardApp(QMainWindow):
                     self.current_deck = deck
                     self.stats_manager.set_current_deck(deck)  # Set current deck in StatsManager
                     self.scheduler.update_learning_rate(deck)
-                    self.flashcard_display.current_index = self.scheduler.get_next_card_index(deck)
                     showing_front, notes_visible = self.flashcard_display.set_deck(deck)
                     
                     # Mengupdate notes dan stats display
@@ -341,7 +340,8 @@ class FlashcardApp(QMainWindow):
 
     def next_card(self):
         # Panggil metode untuk mendapatkan indeks kartu berikutnya dari scheduler
-        self.flashcard_display.current_index = self.scheduler.get_next_card_index(self.current_deck)
+        
+        self.flashcard_display.current_index = (self.flashcard_display.current_index + 1) % len(self.current_deck.flashcards)
         self.flashcard_display.showing_front = True
         card = self.flashcard_display.update_card_display()
         self.flashcard_display.cardChanged.emit(self.flashcard_display.current_index, self.flashcard_display.showing_front)
