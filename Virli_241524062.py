@@ -61,6 +61,7 @@ class FlashcardApp(QMainWindow):
         self.init_ui()
         self.load_decks()
         self.stats_manager.start_timer()
+        self.scheduler = Scheduler()
 
     def init_ui(self):
         self.setWindowTitle("Flashcard App")
