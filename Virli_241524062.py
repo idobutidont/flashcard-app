@@ -7,6 +7,7 @@ from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, R
 from Zein_241524056 import StatsManager, StatsPage
 from Lukman_241524050 import NotesPanel, NotesManager
 from Fakhri_241524053 import FlashcardDisplay
+from DeckIOHandler import DeckIOHandler
 from Scheduler import Scheduler
 
 
@@ -32,10 +33,14 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         self.add_deck_btn = QPushButton("Add New Deck")
         self.delete_deck_btn = QPushButton("Delete Deck")
         self.edit_deck_btn = QPushButton("Rename Deck")
+        self.export_deck_btn = QPushButton("Export Deck") 
+        self.import_deck_btn = QPushButton("Import Deck")
         
         layout.addWidget(self.add_deck_btn)
         layout.addWidget(self.delete_deck_btn)
         layout.addWidget(self.edit_deck_btn)
+        layout.addWidget(self.export_deck_btn)  
+        layout.addWidget(self.import_deck_btn)
         
         self.setLayout(layout)  # Untuk mengatur layout utama 
     
@@ -218,6 +223,10 @@ class FlashcardApp(QMainWindow):
         # Add stats button signal
         self.stats_btn.clicked.connect(self.show_stats)
 
+        # Add export/import button signals
+        self.deck_panel.export_deck_btn.clicked.connect(self.export_deck)  
+        self.deck_panel.import_deck_btn.clicked.connect(self.import_deck)
+
     def load_decks(self):
         self.decks = self.data_manager.load_decks()
         self.deck_panel.populate_decks(self.decks)
@@ -318,6 +327,20 @@ class FlashcardApp(QMainWindow):
                     # Tampilkan tombol sekarang setelah dek dipilih
                     self.update_button_visibility(True)
                     break
+
+    def export_deck(self):  
+        deck_name = self.deck_panel.get_selected_deck_name()
+        if not deck_name:
+            QMessageBox.warning(self, "Peringatan", "Pilih deck yang akan diekspor")
+            return
+            
+        deck = next((d for d in self.decks if d.name == deck_name), None)
+        if deck:
+            DeckIOHandler.export_deck(deck, self)
+
+    def import_deck(self): 
+        DeckIOHandler.import_deck(self.data_manager, self.decks, self)
+        self.load_decks()
 
     def flip_card(self):
         showing_front, card = self.flashcard_display.flip_card()
