@@ -1,10 +1,9 @@
-import os, json, uuid, base64
+import os, json, uuid
 from datetime import datetime
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, 
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                              QTextEdit, QPushButton, QListWidget, QListWidgetItem, 
-                             QMessageBox, QFormLayout, QLineEdit, QSpinBox, QGroupBox)
-from PyQt6.QtCore import Qt, QBuffer, QByteArray
-from PyQt6.QtGui import QImage
+                             QMessageBox, QFormLayout, QLineEdit, QGroupBox)
+from PyQt6.QtCore import Qt
 from Lukman_241524050 import ImageHandler, ImageResizeDialog
 
 # Flashcard (Middle Panel)
@@ -23,9 +22,6 @@ class Flashcard:
         self.retention_score = retention_score
         self.last_reviewed = last_reviewed if last_reviewed else datetime.now().isoformat()
         self.next_review = next_review if next_review else datetime.now().isoformat()
-        self.front_images = {}
-        self.back_images = {}
-        self.notes_images = {}
 
 
     def to_dict(self):
@@ -43,9 +39,6 @@ class Flashcard:
             "retention_score": self.retention_score,
             "last_reviewed": self.last_reviewed,
             "next_review": self.next_review, 
-            "front_images": self.front_images, 
-            "back_images": self.back_images, 
-            "notes_images": self.notes_images 
         }
     
     @classmethod
@@ -64,9 +57,6 @@ class Flashcard:
             retention_score=data.get("retention_score", 0.0),
             last_reviewed=data.get("last_reviewed", datetime.now().isoformat()),
             next_review=data.get("next_review", datetime.now().isoformat()),
-            front_images=data.get("front_images", {}),
-            back_images=data.get("back_images", {}),
-            notes_images=data.get("notes_images", {})
         )
 
 

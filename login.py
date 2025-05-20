@@ -1,7 +1,7 @@
 import os
 import json
 import hashlib
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QGridLayout, QMessageBox
+from PyQt6.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QGridLayout, QMessageBox
 from Virli_241524062 import FlashcardApp
 
 def hash_password(password):
@@ -68,6 +68,7 @@ class LoginWindow(QWidget):
             QMessageBox.information(self, "Login", "Login successful!")
             window = FlashcardApp()
             window.setHidden(False)
+            self.close()
         else:
             QMessageBox.warning(self, "Login", "Invalid username or password.")
 
