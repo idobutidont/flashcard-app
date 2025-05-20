@@ -64,9 +64,9 @@ class Flashcard:
             retention_score=data.get("retention_score", 0.0),
             last_reviewed=data.get("last_reviewed", datetime.now().isoformat()),
             next_review=data.get("next_review", datetime.now().isoformat()),
-            front_images = data.get("front_images", {}),
-            back_images = data.get("back_images", {}),
-            notes_images = data.get("notes_images", {})
+            front_images=data.get("front_images", {}),
+            back_images=data.get("back_images", {}),
+            notes_images=data.get("notes_images", {})
         )
 
 
