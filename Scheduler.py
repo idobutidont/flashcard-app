@@ -62,19 +62,3 @@ class Scheduler:
         card.next_review = (datetime.now() + timedelta(days=interval)).isoformat()
         return card.next_review
     
-    def get_next_card_index(self, deck):
-        """
-        Select the next card to review based on due date and priority.
-        """
-        if not deck.flashcards:
-            return 0
-        
-        now = datetime.now()
-        due_cards = [(i, card) for i, card in enumerate(deck.flashcards) if datetime.fromisoformat(card.next_review) <= now]
-        
-        if not due_cards:
-            return 0  # Default to first card if none are due
-        
-        # Prioritize cards with lower retention scores and higher difficulty
-        sorted_cards = sorted(due_cards, key=lambda x: (x[1].retention_score, -x[1].difficulty))
-        return sorted_cards[0][0]
