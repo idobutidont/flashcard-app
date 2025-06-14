@@ -1,7 +1,7 @@
 # Mengimpor modul PyQt6 yang digunakan untuk membuat tampilan UI
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QStackedWidget, QGraphicsOpacityEffect
 from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QPropertyAnimation
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QTextDocument
 
 # Kelas FlashcardDisplay untuk menampilkan kartu flashcard di tengah aplikasi
 class FlashcardDisplay(QWidget):
@@ -57,7 +57,7 @@ class FlashcardDisplay(QWidget):
             border: 2px solid #FF4500;
             border-radius: 10px;
             padding: 30px;
-            font-size: 16px;
+            font-size: 32px;
             min-height: 200px;
         """)    # Desain/gaya tampilan kartu
 
@@ -134,13 +134,17 @@ class FlashcardDisplay(QWidget):
             
         card = self.current_deck.get_flashcard(self.current_index)
         if card:
+            doc = QTextDocument()
             if self.showing_front:
-                self.card_content.setTextFormat(Qt.TextFormat.RichText)
-                self.card_content.setText(card.front)
+                doc.setHtml(card.front)
+                plain_text = doc.toPlainText()
+                self.card_content.setTextFormat(Qt.TextFormat.PlainText)
+                self.card_content.setText(plain_text)
             else:
-                self.card_content.setTextFormat(Qt.TextFormat.RichText)
-                self.card_content.setText(card.back)
-                self.card_content.move(0, self.card_content.y())
+                doc.setHtml(card.back)
+                plain_text = doc.toPlainText()
+                self.card_content.setTextFormat(Qt.TextFormat.PlainText)
+                self.card_content.setText(plain_text)
             return card
         return None
     
