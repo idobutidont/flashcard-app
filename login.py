@@ -35,19 +35,20 @@ class LoginWindow(QWidget):
 
         layout = QGridLayout()
 
-         # Informasi kriteria username & password
+        # Informasi kriteria username & password
         info_label = QLabel(
             "<b>Username:</b> min 5 karakter (huruf/angka/_)<br>"
             "<b>Password:</b> min 8 karakter, kombinasi huruf besar, huruf kecil, angka, simbol, tanpa spasi"
         )
         info_label.setWordWrap(True)
         info_label.setStyleSheet("color: #555;")
-        layout.addWidget(info_label, 0, 0, 1, 2)
+        # Add info_label below password input, row 3, col 0 spanning 2 columns
+        layout.addWidget(info_label, 3, 0, 1, 2)
 
         # input username
         self.username_input = QLineEdit()
-        layout.addWidget(QLabel("Username:"), 1, 0)
-        layout.addWidget(self.username_input, 1, 1)
+        layout.addWidget(QLabel("Username:"), 0, 0)
+        layout.addWidget(self.username_input, 0, 1)
 
         # input password dengan ikon mata
         self.password_input = QLineEdit()
@@ -72,28 +73,61 @@ class LoginWindow(QWidget):
         self.exit_button = QPushButton("Exit")
 
         # Set consistent styles for login and register buttons
-        button_style = """
+        login_style = """
             QPushButton {
-                background-color: #FF5733;
+                background-color: #28a745; /* green */
                 color: white;
                 font-weight: bold;
                 border-radius: 5px;
                 padding: 8px;
             }
             QPushButton:hover {
-                background-color: #FF6F4D;
+                background-color: #218838;
             }
             QPushButton:disabled {
-                background-color: #FFB399;
+                background-color: #a9d5a9;
                 color: #EEE;
             }
         """
-        self.login_button.setStyleSheet(button_style)
-        self.register_button.setStyleSheet(button_style)
+        register_style = """
+            QPushButton {
+                background-color: #007bff; /* blue */
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 8px;
+            }
+            QPushButton:hover {
+                background-color: #0069d9;
+            }
+            QPushButton:disabled {
+                background-color: #a6c8ff;
+                color: #EEE;
+            }
+        """
+        exit_style = """
+            QPushButton {
+                background-color: #dc3545; /* red */
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 8px;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+            QPushButton:disabled {
+                background-color: #f5a6aa;
+                color: #EEE;
+            }
+        """
+        self.login_button.setStyleSheet(login_style)
+        self.register_button.setStyleSheet(register_style)
+        self.exit_button.setStyleSheet(exit_style)
 
-        layout.addWidget(self.login_button, 3, 0, 1, 2)
-        layout.addWidget(self.register_button, 4, 0, 1, 2)
-        layout.addWidget(self.exit_button, 5, 0, 1, 2)
+        layout.addWidget(self.login_button, 4, 0, 1, 2)
+        layout.addWidget(self.register_button, 5, 0, 1, 2)
+        layout.addWidget(self.exit_button, 6, 0, 1, 2)
 
         self.setLayout(layout)
 
