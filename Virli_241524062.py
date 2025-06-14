@@ -368,6 +368,7 @@ class FlashcardApp(QMainWindow):
         self.flashcard_display.showing_front = True
         card = self.flashcard_display.update_card_display()
         self.flashcard_display.cardChanged.emit(self.flashcard_display.current_index, self.flashcard_display.showing_front)
+        self.flashcard_display.animate_slide(-1) 
 
     def prev_card(self):
         # Panggil metode untuk menampilkan kartu sebelumnya
@@ -376,7 +377,8 @@ class FlashcardApp(QMainWindow):
             self.flashcard_display.showing_front = True
             card = self.flashcard_display.update_card_display()
             self.flashcard_display.cardChanged.emit(self.flashcard_display.current_index, self.flashcard_display.showing_front)
-        
+            self.flashcard_display.animate_slide(1) 
+
     def handle_card_changed(self, index, showing_front):
         """Handle card changed event from flashcard display"""
         # Reset feedback state for new card
