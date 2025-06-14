@@ -149,7 +149,7 @@ class StatsManager(QObject):
             self.stats_label.setVisible(False)
     
     def update_stats_display(self, card):
-        """Memperbarui jumlah benar, salah, dan akurasi pada tampilan statistik"""
+        """Memperbarui jumlah benar, salah, dan Accuracy pada tampilan statistik"""
         if card:
             total = card.right_count + card.wrong_count
             accuracy = (card.right_count / total * 100) if total > 0 else 0
@@ -158,7 +158,7 @@ class StatsManager(QObject):
                          f"Retention: {card.retention_score:.2f}")
             self.stats_label.setText(stats_text)
             
-            # Menentukan warna dari teks akurasi sesuai dengan persen akurasi
+            # Menentukan warna dari teks Accuracy sesuai dengan persen Accuracy
             if accuracy >= 70:
                 self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; color: green;")
             elif accuracy >= 40:
@@ -167,7 +167,7 @@ class StatsManager(QObject):
                 self.stats_label.setStyleSheet("font-size: 14px; font-weight: bold; color: red;")
                 
     def handle_card_right(self, deck, card_index):
-        """Menangani pertambahan dari variabel jumlah jawaban benar"""
+        """Menangani pertambahan dari variabel jumlah Correct Answer"""
         if deck and deck.flashcards:
             card = deck.get_flashcard(card_index)
             if card:
@@ -176,7 +176,7 @@ class StatsManager(QObject):
         return False
     
     def handle_card_wrong(self, deck, card_index):
-        """Menangani pertambahan dari variabel jumlah jawaban salah"""
+        """Menangani pertambahan dari variabel jumlah Incorrect Answer"""
         if deck and deck.flashcards:
             card = deck.get_flashcard(card_index)
             if card:
@@ -313,12 +313,12 @@ class StatsPage(QDialog):
         
         main_stats_layout = QVBoxLayout()
         stats_labels = [
-            (f"✅ Jawaban Benar: {self.correct}", "#27ae60"),
-            (f"❌ Jawaban Salah: {self.incorrect}", "#c0392b"),
-            (f"🔄 Total Pertanyaan: {self.total}", "#2980b9"),
-            (f"📈 Akurasi: {self.accuracy:.2f}%", self._get_accuracy_color()),
-            (f"📊 Tingkat Kesulitan: {self.difficulty}", "#8e44ad"),
-            (f"🧠 Skor Retensi: {self.retention:.2f}", "#16a085")
+            (f"✅ Correct Answer: {self.correct}", "#27ae60"),
+            (f"❌ Incorrect Answer: {self.incorrect}", "#c0392b"),
+            (f"🔄 Total Questions: {self.total}", "#2980b9"),
+            (f"📈 Accuracy: {self.accuracy:.2f}%", self._get_accuracy_color()),
+            (f"📊 Difficulity: {self.difficulty}", "#8e44ad"),
+            (f"🧠 Retention Score: {self.retention:.2f}", "#16a085")
         ]
         
         for text, color in stats_labels:
@@ -351,8 +351,8 @@ class StatsPage(QDialog):
         
         extra_stats_layout = QVBoxLayout()
         extra_labels = [
-            (f"🎯 Skor Sesi Terakhir: {last_session_score:.1f}%", "#8e44ad"),
-            (f"⏳ Total Waktu Belajar: {total_study_time:.1f} menit", "#d35400")
+            (f"🎯 Last Session Score: {last_session_score:.1f}%", "#8e44ad"),
+            (f"⏳ Total Study Time: {total_study_time:.1f} minute", "#d35400")
         ]
         for text, color in extra_labels:
             label = QLabel(text)
@@ -395,7 +395,7 @@ class StatsPage(QDialog):
         self.add_viz_button("🎯 Accuracy Distribution", self.show_accuracy_dist, viz_buttons_row)
         
         # Reset button with full width
-        reset_button = QPushButton("🔄 Reset Statistik")
+        reset_button = QPushButton("🔄 Reset Statistics")
         reset_button.setStyleSheet("""
             QPushButton {
                 background-color: #e74c3c;
@@ -461,18 +461,18 @@ class StatsPage(QDialog):
             
             # Update labels
             for label in self.findChildren(QLabel):
-                if "Jawaban Benar" in label.text():
-                    label.setText(f"✅ Jawaban Benar: {self.correct}")
-                elif "Jawaban Salah" in label.text():
-                    label.setText(f"❌ Jawaban Salah: {self.incorrect}")
-                elif "Total Pertanyaan" in label.text():
-                    label.setText(f"🔄 Total Pertanyaan: {self.total}")
-                elif "Akurasi" in label.text():
-                    label.setText(f"📈 Akurasi: {self.accuracy:.2f}%")
-                elif "Tingkat Kesulitan" in label.text():
-                    label.setText(f"📊 Tingkat Kesulitan: {self.difficulty}")
-                elif "Skor Retensi" in label.text():
-                    label.setText(f"🧠 Skor Retensi: {self.retention:.2f}")
+                if "Correct Answer" in label.text():
+                    label.setText(f"✅ Correct Answer: {self.correct}")
+                elif "Incorrect Answer" in label.text():
+                    label.setText(f"❌ Incorrect Answer: {self.incorrect}")
+                elif "Total Questions" in label.text():
+                    label.setText(f"🔄 Total Questions: {self.total}")
+                elif "Accuracy" in label.text():
+                    label.setText(f"📈 Accuracy: {self.accuracy:.2f}%")
+                elif "Difficulity" in label.text():
+                    label.setText(f"📊 Difficulity: {self.difficulty}")
+                elif "Retention Score" in label.text():
+                    label.setText(f"🧠 Retention Score: {self.retention:.2f}")
 
     def add_viz_button(self, text, callback, layout):
         """Helper method to create and add visualization buttons"""
