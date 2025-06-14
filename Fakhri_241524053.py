@@ -93,6 +93,8 @@ class FlashcardDisplay(QWidget):
         self.animation.setStartValue(0.0)
         self.animation.setEndValue(1.0)
         self.animation.start()
+        # Ensure the opacity effect is fully visible at the end
+        self.opacity_effect.setOpacity(1.0)
 
     def init_slide_animations(self):
         self.pos_animation = QPropertyAnimation(self.card_content, b"pos")
@@ -109,6 +111,8 @@ class FlashcardDisplay(QWidget):
         self.pos_animation.setStartValue(self.card_content.pos())
         self.pos_animation.setEndValue(original_pos)
         self.pos_animation.start()
+        # Ensure the card_content is at the original position after animation
+        self.pos_animation.finished.connect(lambda: self.card_content.move(original_pos))
 
     def set_deck(self, deck):
         """Mengatur dek yang sedang digunakan dan memperbarui tampilan"""

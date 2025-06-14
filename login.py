@@ -30,6 +30,9 @@ class LoginWindow(QWidget):
         self.setWindowTitle("Login")
         self.resize(500,120)
 
+        from PyQt6.QtGui import QIcon
+        self.setWindowIcon(QIcon("images/icon.png"))
+
         layout = QGridLayout()
 
          # Informasi kriteria username & password
@@ -67,6 +70,26 @@ class LoginWindow(QWidget):
         self.login_button = QPushButton("Login")
         self.register_button = QPushButton("Register")
         self.exit_button = QPushButton("Exit")
+
+        # Set consistent styles for login and register buttons
+        button_style = """
+            QPushButton {
+                background-color: #FF5733;
+                color: white;
+                font-weight: bold;
+                border-radius: 5px;
+                padding: 8px;
+            }
+            QPushButton:hover {
+                background-color: #FF6F4D;
+            }
+            QPushButton:disabled {
+                background-color: #FFB399;
+                color: #EEE;
+            }
+        """
+        self.login_button.setStyleSheet(button_style)
+        self.register_button.setStyleSheet(button_style)
 
         layout.addWidget(self.login_button, 3, 0, 1, 2)
         layout.addWidget(self.register_button, 4, 0, 1, 2)
