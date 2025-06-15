@@ -22,9 +22,9 @@ class DeckIOHandler:
                     
                 with open(path, 'w') as f:
                     json.dump(deck.to_dict(), f, indent=2)
-                QMessageBox.information(parent, "Success", "Deck berhasil diekspor!")
+                QMessageBox.information(parent, "Success", "Deck exported successfully!")
             except Exception as e:
-                QMessageBox.critical(parent, "Error", f"Gagal mengekspor: {str(e)}")
+                QMessageBox.critical(parent, "Error", f"Failed to export: {str(e)}")
 
     @staticmethod
     def import_deck(data_manager, decks, parent):
@@ -48,11 +48,11 @@ class DeckIOHandler:
                 if new_deck.name in existing_names:
                     msg = QMessageBox(parent)
                     msg.setIcon(QMessageBox.Icon.Warning)
-                    msg.setText("Deck dengan nama ini sudah ada")
-                    msg.setInformativeText("Pilih tindakan:")
-                    msg.addButton("Timpa", QMessageBox.ButtonRole.AcceptRole)
-                    msg.addButton("Ganti Nama", QMessageBox.ButtonRole.YesRole)
-                    msg.addButton("Batal", QMessageBox.ButtonRole.RejectRole)
+                    msg.setText("A deck with this name already exists!")
+                    msg.setInformativeText("Choose an action:")
+                    msg.addButton("Overwrite", QMessageBox.ButtonRole.AcceptRole)
+                    msg.addButton("Rename", QMessageBox.ButtonRole.YesRole)
+                    msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
                     ret = msg.exec()
                     
                     if ret == 0:  # Timpa
@@ -73,7 +73,7 @@ class DeckIOHandler:
                 
                 decks.append(new_deck)
                 data_manager.save_deck(new_deck)
-                QMessageBox.information(parent, "Success", "Deck berhasil diimpor!")
+                QMessageBox.information(parent, "Success", "Deck imported successfully!")
                 
             except Exception as e:
-                QMessageBox.critical(parent, "Error", f"Gagal mengimpor: {str(e)}")
+                QMessageBox.critical(parent, "Error", f"Failed to import: {str(e)}")

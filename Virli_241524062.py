@@ -1,7 +1,6 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit)
+from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit, QMenuBar, QMenu)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
-from datetime import datetime
+from PyQt6.QtGui import QIcon, QAction
 
 from Ido_241524047 import Deck, DataManager, AddCardDialog, ManageCardsDialog, RenameDeckDialog, RateDifficultyDialog
 from Zein_241524056 import StatsManager, StatsPage
@@ -33,14 +32,10 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         self.add_deck_btn = QPushButton("Add New Deck")
         self.delete_deck_btn = QPushButton("Delete Deck")
         self.edit_deck_btn = QPushButton("Rename Deck")
-        self.export_deck_btn = QPushButton("Export Deck") 
-        self.import_deck_btn = QPushButton("Import Deck")
         
         layout.addWidget(self.add_deck_btn)
         layout.addWidget(self.delete_deck_btn)
         layout.addWidget(self.edit_deck_btn)
-        layout.addWidget(self.export_deck_btn)  
-        layout.addWidget(self.import_deck_btn)
         
         self.setLayout(layout)  # Untuk mengatur layout utama 
     
@@ -71,6 +66,7 @@ class FlashcardApp(QMainWindow):
     def init_ui(self):
         self.setWindowTitle("Flashcard App")
         self.setMinimumSize(900, 600)
+        self.create_menu_bar()
 
         # Widget utama
         main_widget = QWidget()
@@ -154,6 +150,27 @@ class FlashcardApp(QMainWindow):
         self.logout_btn.clicked.connect(self.logout)
         card_mgmt_layout.addWidget(self.logout_btn)
 
+    def create_menu_bar(self):
+        """Create menu bar with File menu containing Import and Export options"""
+        menubar = self.menuBar()
+        
+        # File menu
+        file_menu = menubar.addMenu('File')
+        
+        # Import Deck action
+        import_action = QAction('Import Deck', self)
+        import_action.setShortcut('Ctrl+I')
+        import_action.setStatusTip('Import a deck from file')
+        import_action.triggered.connect(self.import_deck)
+        file_menu.addAction(import_action)
+        
+        # Export Deck action
+        export_action = QAction('Export Deck', self)
+        export_action.setShortcut('Ctrl+E')
+        export_action.setStatusTip('Export selected deck to file')
+        export_action.triggered.connect(self.export_deck)
+        file_menu.addAction(export_action)
+
     def logout(self):
         confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?")
         if confirm == QMessageBox.StandardButton.Yes:
@@ -162,29 +179,33 @@ class FlashcardApp(QMainWindow):
 
 
     def update_button_visibility(self, has_deck_selected):
-        """Mengatur visibilitas tombol berdasarkan apakah ada deck yang dipilih"""
+        """Mengatur visibilitas tombol berdasarkan apakah ada deck yang dipilih dan memiliki flashcard"""
+        # Check if deck has flashcards
+        has_flashcards = (has_deck_selected and self.current_deck and 
+                         len(self.current_deck.flashcards) > 0)
+        
         # Navigation buttons
-        self.prev_btn.setVisible(has_deck_selected)
-        self.flip_btn.setVisible(has_deck_selected)
-        self.next_btn.setVisible(has_deck_selected)
-        self.toggle_notes_btn.setVisible(has_deck_selected and self.flashcard_display.showing_front)
+        self.prev_btn.setVisible(has_flashcards)
+        self.flip_btn.setVisible(has_flashcards)
+        self.next_btn.setVisible(has_flashcards)
+        self.toggle_notes_btn.setVisible(has_flashcards and self.flashcard_display.showing_front)
         
         # Card management buttons
         self.add_card_btn.setVisible(has_deck_selected)
         self.manage_cards_btn.setVisible(has_deck_selected)
         
         # Stats button visibility
-        self.stats_btn.setVisible(has_deck_selected)
+        self.stats_btn.setVisible(has_flashcards)
 
         # Mengatur tombol feedback (benar/salah)
-        if has_deck_selected:
+        if has_flashcards:
             # Hanya perbarui jika kita memiliki deck, jika tidak biarkan tersembunyi
             self.stats_manager.update_feedback_buttons(
                 self.flashcard_display.showing_front,
                 self.flashcard_display.get_current_card()
             )
         else:
-            # Sembunyikan secara eksplisit jika tidak ada deck yang dipilih
+            # Sembunyikan secara eksplisit jika tidak ada deck yang dipilih atau deck kosong
             self.stats_manager.right_btn.setVisible(False)
             self.stats_manager.wrong_btn.setVisible(False)
             self.stats_manager.stats_label.setVisible(False)
@@ -222,10 +243,6 @@ class FlashcardApp(QMainWindow):
 
         # Add stats button signal
         self.stats_btn.clicked.connect(self.show_stats)
-
-        # Add export/import button signals
-        self.deck_panel.export_deck_btn.clicked.connect(self.export_deck)  
-        self.deck_panel.import_deck_btn.clicked.connect(self.import_deck)
 
     def load_decks(self):
         self.decks = self.data_manager.load_decks()
@@ -324,25 +341,30 @@ class FlashcardApp(QMainWindow):
                         notes_visible
                     )
                     
-                    # Tampilkan tombol sekarang setelah dek dipilih
+                    # Tampilkan tombol sekarang setelah dek dipilih dan cek apakah ada flashcard
                     self.update_button_visibility(True)
                     break
 
     def export_deck(self):  
         deck_name = self.deck_panel.get_selected_deck_name()
         if not deck_name:
-            QMessageBox.warning(self, "Peringatan", "Pilih deck yang akan diekspor")
+            QMessageBox.warning(self, "Warning", "Please select a deck to export.")
             return
             
         deck = next((d for d in self.decks if d.name == deck_name), None)
         if deck:
             DeckIOHandler.export_deck(deck, self)
+        else:
+            QMessageBox.warning(self, "Warning", "Selected deck not found.")
 
     def import_deck(self): 
         DeckIOHandler.import_deck(self.data_manager, self.decks, self)
         self.load_decks()
 
     def flip_card(self):
+        if not self.current_deck or not self.current_deck.flashcards:
+            return
+            
         showing_front, card = self.flashcard_display.flip_card()
         
         # Update stats display
@@ -362,6 +384,9 @@ class FlashcardApp(QMainWindow):
         )
 
     def next_card(self):
+        if not self.current_deck or not self.current_deck.flashcards:
+            return
+            
         # Panggil metode untuk mendapatkan indeks kartu berikutnya dari scheduler
         
         self.flashcard_display.current_index = (self.flashcard_display.current_index + 1) % len(self.current_deck.flashcards)
@@ -371,6 +396,9 @@ class FlashcardApp(QMainWindow):
         self.flashcard_display.animate_slide(-1) 
 
     def prev_card(self):
+        if not self.current_deck or not self.current_deck.flashcards:
+            return
+            
         # Panggil metode untuk menampilkan kartu sebelumnya
         if self.current_deck and self.current_deck.flashcards:
             self.flashcard_display.current_index = (self.flashcard_display.current_index - 1) % len(self.current_deck.flashcards)
@@ -406,6 +434,9 @@ class FlashcardApp(QMainWindow):
         )
 
     def toggle_notes(self):
+        if not self.current_deck or not self.current_deck.flashcards:
+            return
+            
         notes_visible = self.flashcard_display.toggle_notes_visibility()
         self.notes_manager.toggle_notes_visibility(notes_visible)
         self.notes_manager.update_toggle_notes_button(
@@ -450,6 +481,9 @@ class FlashcardApp(QMainWindow):
                 card
             )
             self.data_manager.save_deck(self.current_deck)
+            
+            # Update button visibility in case this was the first card added
+            self.update_button_visibility(True)
 
     def manage_flashcards(self):
         if not self.current_deck:
@@ -476,9 +510,15 @@ class FlashcardApp(QMainWindow):
             )
             
             self.data_manager.save_deck(self.current_deck)
+            
+            # Update button visibility in case cards were deleted
+            self.update_button_visibility(True)
 
     def mark_card_feedback(self, is_right):
         """Mark the current card as right or wrong"""
+        if not self.current_deck or not self.current_deck.flashcards:
+            return
+            
         self.stats_manager.mark_card_feedback(
             is_right, 
             self.flashcard_display.current_index
@@ -510,18 +550,21 @@ class FlashcardApp(QMainWindow):
 
     def show_stats(self):
         """Show statistics for current card"""
-        if self.current_deck and self.flashcard_display.get_current_card():
-            current_card = self.flashcard_display.get_current_card()
-            stats_window = StatsPage(
-                card=current_card,
-                last_session_score=self.calculate_session_score(),
-                total_study_time=self.stats_manager.get_elapsed_time()
-            )
-            stats_window.exec()  # Use exec() instead of show() for modal dialog
+        if (not self.current_deck or not self.current_deck.flashcards or 
+            not self.flashcard_display.get_current_card()):
+            return
             
-            # Update display after potential reset
-            self.data_manager.save_deck(self.current_deck)
-            self.flashcard_display.update_card_display()
+        current_card = self.flashcard_display.get_current_card()
+        stats_window = StatsPage(
+            card=current_card,
+            last_session_score=self.calculate_session_score(),
+            total_study_time=self.stats_manager.get_elapsed_time()
+        )
+        stats_window.exec()
+        
+        # Update display after potential reset
+        self.data_manager.save_deck(self.current_deck)
+        self.flashcard_display.update_card_display()
     
     def calculate_session_score(self):
         """Calculate score for current session"""
