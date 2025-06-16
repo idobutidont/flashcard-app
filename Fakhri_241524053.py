@@ -33,7 +33,7 @@ class FlashcardDisplay(QWidget):
         # Halaman sambutan saat tidak ada dek yang dipilih
         self.welcome_widget = QLabel("Welcome! Please select or create a deck to start.")
         self.welcome_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.welcome_widget.setStyleSheet("font-size: 16px; color: #444; background-color: #FFDD57; padding: 20px; border-radius: 5px;")
+        self.welcome_widget.setStyleSheet("font-size: 16px; color: #444; background-color: #FFC300; padding: 20px; border-radius: 5px;")
         self.card_stack.addWidget(self.welcome_widget)  # Tambahkan ke card_stack
         
         # Widget utama untuk menampilkan kartu

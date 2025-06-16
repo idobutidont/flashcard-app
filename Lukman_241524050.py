@@ -1,7 +1,7 @@
 import base64
 
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QLabel, QPushButton, QHBoxLayout, QFileDialog, QSpinBox, QDialog
-from PyQt6.QtCore import Qt, QBuffer, QByteArray
+from PyQt6.QtCore import Qt,QAbstractAnimation, QBuffer, QByteArray, QPropertyAnimation, QEasingCurve, QPoint
 from PyQt6.QtGui import QImage 
 
 # NotesPanel Handling 
@@ -24,14 +24,16 @@ class NotesPanel(QWidget):
         layout = QVBoxLayout()
          
         # Section title in Notes Panel
-        title = QLabel("Card Notes")
-        title.setStyleSheet("font-size: 16px; font-weight: bold;")
-        layout.addWidget(title)
+        self.title = QLabel("Card Notes")
+        self.title.setStyleSheet("font-size: 16px; font-weight: bold; background-color: #FF5733; border-radius: 10px; padding: 5px;")
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.title)
         
         # Section text editor in Notes Panel
         self.notes_text = QTextEdit()
         self.notes_text.setPlaceholderText("Add your notes for this card here...")
         self.notes_text.setAcceptRichText(True)
+        self.notes_text.setStyleSheet("background-color: #FFC300; color: #333333;")
         layout.addWidget(self.notes_text, 1)
         
         # Section save button in Notes Panel

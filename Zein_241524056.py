@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QApplication, QGroupBox, QVBoxLayout, QDialog, QMessageBox
 from PyQt6.QtCore import QObject, pyqtSignal, Qt, QElapsedTimer
+from PyQt6.QtGui import QIcon
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -236,6 +237,7 @@ class StatsPage(QDialog):
         
         # Set window properties 
         self.setWindowTitle("Flashcard App - Statistik")
+        self.setWindowIcon(QIcon("images/icon.png"))
         self.setGeometry(100, 100, 600, 450)
         self.setStyleSheet("""
             QDialog {
@@ -243,7 +245,7 @@ class StatsPage(QDialog):
                 border-radius: 10px;
             }
             QGroupBox {
-                background-color: white;
+                background-color: #FFC300;
                 border-radius: 8px;
                 border: none;
                 margin-top: 15px;
@@ -300,12 +302,11 @@ class StatsPage(QDialog):
         self.retention = self.card.retention_score if self.card else 0.0
         self.total_study_time = total_study_time  # Store for use in visualizations
 
-        # Main stats box with gradient background
+        # Main stats box with solid background color #FFC300
         main_stats_box = QGroupBox("📊 Statistik Utama")
         main_stats_box.setStyleSheet("""
             QGroupBox {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffffff, stop:1 #f0f8ff);
+                background-color: #FFC300;
                 padding: 15px;
                 margin: 10px;
             }
@@ -338,12 +339,11 @@ class StatsPage(QDialog):
         
         main_stats_box.setLayout(main_stats_layout)
 
-        # Extra stats box
+        # Extra stats box with solid background color #FFC300
         extra_stats_box = QGroupBox("📂 Detail Tambahan")
         extra_stats_box.setStyleSheet("""
             QGroupBox {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffffff, stop:1 #fff0f5);
+                background-color: #FFC300;
                 padding: 15px;
                 margin: 10px;
             }
@@ -374,9 +374,9 @@ class StatsPage(QDialog):
         # Visualization section
         viz_box = QGroupBox("📊 Data Visualizations")
         viz_box.setStyleSheet("""
-            QGroupBox {
+            QGroupBox {             
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffffff, stop:1 #e8f5e9);
+                    stop:0 #FFC300, stop:1 #e8f5e9);
                 padding: 15px;
                 margin: 10px;
                 border-radius: 8px;
