@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel, QDialog, QFormLayout, QLineEdit, QMenuBar, QMenu)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QInputDialog, QMessageBox, QSplitter, QPushButton, QListWidget, QLabel)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QAction
 
@@ -606,6 +606,10 @@ class FlashcardApp(QMainWindow):
         if self.current_deck:
             self.stats_manager.stop_timer()
             self.data_manager.save_deck(self.current_deck)
+        
+        # Ensure the entire application closes, including any hidden windows
+        QApplication.quit()
+        
         event.accept()
     
     def show_user_profile(self):

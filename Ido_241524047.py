@@ -745,7 +745,7 @@ class UserProfileDialog(QDialog):
     
     def init_ui(self):
         self.setWindowTitle(f"User Profile - {self.username}")
-        self.setMinimumSize(350, 250)
+        self.setMinimumSize(500, 250)
         
         layout = QVBoxLayout()
         
