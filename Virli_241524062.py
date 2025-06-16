@@ -582,10 +582,11 @@ class FlashcardApp(QMainWindow):
         stats_window = StatsPage(
             card=current_card,
             last_session_score=self.calculate_session_score(),
-            total_study_time=self.stats_manager.get_elapsed_time()
+            total_study_time=self.stats_manager.get_elapsed_time(),
+            parent=self
         )
+        stats_window.setWindowModality(Qt.WindowModality.WindowModal)
         stats_window.exec()
-        
         # Update display after potential reset
         self.data_manager.save_deck(self.current_deck)
         self.flashcard_display.update_card_display()

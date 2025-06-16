@@ -232,8 +232,8 @@ class PlotDialog(QDialog):
         self.setLayout(layout)
 
 class StatsPage(QDialog):
-    def __init__(self, card, last_session_score, total_study_time):
-        super().__init__()
+    def __init__(self, card, last_session_score, total_study_time, parent=None):
+        super().__init__(parent)
         
         # Set window properties 
         self.setWindowTitle("Flashcard App - Statistik")
