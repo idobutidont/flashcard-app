@@ -174,9 +174,9 @@ class LoginWindow(QWidget):
 
         if users.get(username) == password_hash:
             QMessageBox.information(self, "Login", "Login successful!")
-            window = FlashcardApp()
-            window.setHidden(False)
-            self.close()
+            self.flashcard_app = FlashcardApp(self)
+            self.flashcard_app.show()
+            self.setHidden(True)
         else:
             QMessageBox.warning(self, "Login", "Invalid username or password.")
 
