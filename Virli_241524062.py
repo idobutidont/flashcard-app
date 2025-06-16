@@ -176,9 +176,13 @@ class FlashcardApp(QMainWindow):
     def logout(self):
         confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?")
         if confirm == QMessageBox.StandardButton.Yes:
-            self.close()  # Menutup FlashcardApp
-            self.parent.show()  # Menampilkan LoginWindow lagi
-
+            if self.parent:
+                self.close()  # Close FlashcardApp
+                self.parent.username_input.clear()  # Clear the login form
+                self.parent.password_input.clear()
+                self.parent.show()  # Show login window again
+            else:
+                self.close()  # Just close if no parent exists
 
     def update_button_visibility(self, has_deck_selected):
         """Mengatur visibilitas tombol berdasarkan apakah ada deck yang dipilih dan memiliki flashcard"""
