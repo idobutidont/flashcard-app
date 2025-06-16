@@ -493,10 +493,6 @@ class StatsPage(QDialog):
         """)
         btn.clicked.connect(callback)
         
-        # Only show button if there is data to display
-        has_data = (self.correct + self.incorrect) > 0
-        btn.setVisible(has_data)
-        
         layout.addWidget(btn)
 
     def show_performance_chart(self):
