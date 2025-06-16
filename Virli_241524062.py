@@ -27,7 +27,7 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         
         # Daftar deck 
         self.deck_list = QListWidget()
-        self.deck_list.setStyleSheet("background-color: #333333; color: #white;")
+        self.deck_list.setStyleSheet("background-color: #333333; color: white;")
         layout.addWidget(self.deck_list)
         
         # Tombol untuk menambah, menghapus, dan rename deck 

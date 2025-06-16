@@ -33,7 +33,7 @@ class NotesPanel(QWidget):
         self.notes_text = QTextEdit()
         self.notes_text.setPlaceholderText("Add your notes for this card here...")
         self.notes_text.setAcceptRichText(True)
-        self.notes_text.setStyleSheet("background-color: #333333; color: #white;")
+        self.notes_text.setStyleSheet("background-color: #333333; color: white;")
         layout.addWidget(self.notes_text, 1)
         
         # Section save button in Notes Panel
