@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QApplication, QGroupBox, QVBoxLayout, QDialog
+from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QApplication, QGroupBox, QVBoxLayout, QDialog, QMessageBox
 from PyQt6.QtCore import QObject, pyqtSignal, Qt, QElapsedTimer
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -492,6 +492,11 @@ class StatsPage(QDialog):
             }
         """)
         btn.clicked.connect(callback)
+        
+        # Only show button if there is data to display
+        has_data = (self.correct + self.incorrect) > 0
+        btn.setVisible(has_data)
+        
         layout.addWidget(btn)
 
     def show_performance_chart(self):
@@ -535,6 +540,11 @@ class StatsPage(QDialog):
 
     def show_accuracy_dist(self):
         """Show accuracy distribution using Matplotlib pie chart"""
+        # Add safety check
+        if (self.correct + self.incorrect) == 0:
+            QMessageBox.warning(self, "No Data", "No study data available yet.")
+            return
+            
         fig, ax = plt.subplots(figsize=(8, 8))
         
         labels = ['Correct', 'Incorrect']
