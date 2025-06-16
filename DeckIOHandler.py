@@ -1,6 +1,6 @@
 import json
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QInputDialog
-from Ido_241524047 import Deck, DataManager
+from Ido_241524047 import Deck
 
 class DeckIOHandler:
     @staticmethod

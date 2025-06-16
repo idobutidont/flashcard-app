@@ -57,6 +57,12 @@ class FlashcardApp(QMainWindow):
         super().__init__(parent)
         self.parent = parent  # Menyimpan referensi ke LoginWindow (parent)
         self.setWindowIcon(QIcon("images/icon.png"))
+        
+        # Multi-user support
+        self.current_user = None
+        self.user_manager = None
+        
+        # Initialize with default data manager (will be updated when user logs in)
         self.data_manager = DataManager()
         self.decks = []  # Daftar deck
         self.current_deck = None  # Deck yang dipilih
@@ -172,6 +178,16 @@ class FlashcardApp(QMainWindow):
         export_action.setStatusTip('Export selected deck to file')
         export_action.triggered.connect(self.export_deck)
         file_menu.addAction(export_action)
+        
+        # User menu (only show if multi-user mode is active)
+        if hasattr(self, 'current_user') and self.current_user:
+            user_menu = menubar.addMenu('User')
+            
+            # User Profile action
+            profile_action = QAction('Profile Settings', self)
+            profile_action.setStatusTip('View and edit your profile')
+            profile_action.triggered.connect(self.show_user_profile)
+            user_menu.addAction(profile_action)
 
     def logout(self):
         confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?")
@@ -589,3 +605,30 @@ class FlashcardApp(QMainWindow):
             self.stats_manager.stop_timer()
             self.data_manager.save_deck(self.current_deck)
         event.accept()
+    
+    def show_user_profile(self):
+        """Show user profile dialog"""
+        if not self.current_user or not self.user_manager:
+            return
+        
+        from Ido_241524047 import UserProfileDialog
+        dialog = UserProfileDialog(self.current_user, self.user_manager, self)
+        dialog.exec()
+    
+    def set_user(self, username, user_manager):
+        """Set the current user and update data manager"""
+        self.current_user = username
+        self.user_manager = user_manager
+        
+        # Update data manager to be user-specific
+        from Ido_241524047 import DataManager
+        self.data_manager = DataManager(username)
+        
+        # Update window title
+        self.setWindowTitle(f"Flashcard App - {username}")
+        
+        # Recreate menu bar to show user menu
+        self.create_menu_bar()
+        
+        # Reload decks for the new user
+        self.load_decks()

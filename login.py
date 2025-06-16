@@ -1,9 +1,8 @@
-import os
-import json
 import hashlib
 import re
 from PyQt6.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QGridLayout, QMessageBox, QHBoxLayout
 from Virli_241524062 import FlashcardApp
+from Ido_241524047 import UserManager, DataManager
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -27,8 +26,9 @@ def valid_password(password):
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.user_manager = UserManager()
         self.setWindowTitle("Login")
-        self.resize(500,120)
+        self.resize(680,120)
 
         from PyQt6.QtGui import QIcon
         self.setWindowIcon(QIcon("images/icon.png"))
@@ -163,22 +163,14 @@ class LoginWindow(QWidget):
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        password_hash = hash_password(password)
 
-        if not os.path.exists("data/users.json"):
-            QMessageBox.warning(self, "Error", "No users found.")
-            return
+        success, message = self.user_manager.authenticate_user(username, password)
 
-        with open("data/users.json", "r") as f:
-            users = json.load(f)
-
-        if users.get(username) == password_hash:
+        if success:
             QMessageBox.information(self, "Login", "Login successful!")
-            self.flashcard_app = FlashcardApp(self)
-            self.flashcard_app.show()
-            self.setHidden(True)
+            self.open_flashcard_app(username)
         else:
-            QMessageBox.warning(self, "Login", "Invalid username or password.")
+            QMessageBox.warning(self, "Login", message)
 
         self.username_input.clear()
         self.password_input.clear()
@@ -201,28 +193,32 @@ class LoginWindow(QWidget):
                 "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol, serta tanpa spasi.")
             return
 
-        password_hash = hash_password(password)
+        success, message = self.user_manager.register_user(username, password)
 
-        if os.path.exists("data/users.json"):
-            with open("data/users.json", "r") as f:
-                users = json.load(f)
+        if success:
+            QMessageBox.information(self, "Register", "Registration successful! You can now login.")
         else:
-            users = {}
-
-        if username in users:
-            QMessageBox.warning(self, "Register", "Username already exists.")
-        else:
-            users[username] = password_hash
-            with open("data/users.json", "w") as f:
-                json.dump(users, f)
-            QMessageBox.information(self, "Register", "Registration successful.")
-            window = FlashcardApp()
-            window.setHidden(False)
-            window.setHidden(False)
-            self.close()
+            QMessageBox.warning(self, "Register", message)
             
-
         self.username_input.clear()
         self.password_input.clear()
         self.toggle_password_button.setChecked(False)
         self.toggle_password_visibility()
+    
+    def open_flashcard_app(self, username):
+        """Open the flashcard application for the logged-in user"""
+        try:
+            # Create user-specific data manager
+            user_data_manager = DataManager(username)
+            
+            # Create and show flashcard app
+            window = FlashcardApp(self)
+            window.data_manager = user_data_manager
+            window.set_user(username, self.user_manager)
+            window.show()
+            
+            # Only close login window if flashcard app opened successfully
+            self.hide()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to open flashcard application: {str(e)}")
