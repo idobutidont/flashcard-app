@@ -25,7 +25,7 @@ class NotesPanel(QWidget):
          
         # Section title in Notes Panel
         self.title = QLabel("Card Notes")
-        self.title.setStyleSheet("font-size: 16px; font-weight: bold; background-color: #333333; border-radius: 10px; padding: 5px;")
+        self.title.setStyleSheet("font-size: 16px; font-weight: bold; border-radius: 10px; padding: 5px;")
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title)
         
@@ -33,7 +33,6 @@ class NotesPanel(QWidget):
         self.notes_text = QTextEdit()
         self.notes_text.setPlaceholderText("Add your notes for this card here...")
         self.notes_text.setAcceptRichText(True)
-        self.notes_text.setStyleSheet("background-color: #333333; color: white;")
         layout.addWidget(self.notes_text, 1)
         
         # Section save button in Notes Panel

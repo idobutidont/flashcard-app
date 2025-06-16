@@ -21,13 +21,12 @@ class DeckListPanel(QWidget):  # Class untuk panel daftar deck pada flashcard
         
         # Judul pada panel 
         title = QLabel("Flashcard Decks")
-        title.setStyleSheet("font-size: 16px; font-weight: bold; background-color: #333333; border-radius: 10px; padding: 5px;")
+        title.setStyleSheet("font-size: 16px; font-weight: bold; border-radius: 10px; padding: 5px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
         # Daftar deck 
         self.deck_list = QListWidget()
-        self.deck_list.setStyleSheet("background-color: #333333; color: white;")
         layout.addWidget(self.deck_list)
         
         # Tombol untuk menambah, menghapus, dan rename deck 
