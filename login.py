@@ -222,4 +222,3 @@ class LoginWindow(QWidget):
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to open flashcard application: {str(e)}")
-            print(f"Error opening flashcard app: {e}")  # For debugging
