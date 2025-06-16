@@ -162,6 +162,9 @@ class FlashcardApp(QMainWindow):
         """Create menu bar with File menu containing Import and Export options"""
         menubar = self.menuBar()
         
+        # Clear existing menus to avoid duplicates
+        menubar.clear()
+        
         # File menu
         file_menu = menubar.addMenu('File')
         
