@@ -381,6 +381,136 @@ class AddCardDialog(QDialog):
             "difficulty": self.selected_difficulty
         }
 
+
+# Edit Card Window
+class EditCardDialog(QDialog):
+    def __init__(self, card, parent=None):
+        super().__init__(parent)
+        self.card = card
+        self.selected_difficulty = card.difficulty
+        self.difficulty_buttons = []
+        self.init_ui()
+        
+    def init_ui(self):
+        self.setWindowTitle("Edit Flashcard")
+        self.setMinimumWidth(600)
+        
+        layout = QVBoxLayout()
+        
+        # Front of card
+        front_group = QGroupBox("Front (Question)")
+        front_layout = QVBoxLayout()
+        self.front_text = QTextEdit()
+        self.front_text.setMaximumHeight(100)
+        self.front_text.setAcceptRichText(True)
+        self.front_text.setHtml(self.card.front)
+        self.insert_front_image_btn = QPushButton("Insert Image")
+        self.insert_front_image_btn.clicked.connect(lambda: self.insert_image(self.front_text))
+        front_layout.addWidget(self.front_text)
+        front_layout.addWidget(self.insert_front_image_btn)
+        front_group.setLayout(front_layout)
+        layout.addWidget(front_group)
+        
+        # Back of card
+        back_group = QGroupBox("Back (Answer)")
+        back_layout = QVBoxLayout()
+        self.back_text = QTextEdit()
+        self.back_text.setMaximumHeight(100)
+        self.back_text.setAcceptRichText(True)
+        self.back_text.setHtml(self.card.back)
+        self.insert_back_image_btn = QPushButton("Insert Image")
+        self.insert_back_image_btn.clicked.connect(lambda: self.insert_image(self.back_text))
+        back_layout.addWidget(self.back_text)
+        back_layout.addWidget(self.insert_back_image_btn)
+        back_group.setLayout(back_layout)
+        layout.addWidget(back_group)
+        
+        # Notes
+        notes_group = QGroupBox("Notes (Optional)")
+        notes_layout = QVBoxLayout()
+        self.notes_text = QTextEdit()
+        self.notes_text.setAcceptRichText(True)
+        self.notes_text.setHtml(self.card.notes)
+        self.insert_notes_image_btn = QPushButton("Insert Image")
+        self.insert_notes_image_btn.clicked.connect(lambda: self.insert_image(self.notes_text))
+        notes_layout.addWidget(self.notes_text)
+        notes_layout.addWidget(self.insert_notes_image_btn)
+        notes_group.setLayout(notes_layout)
+        layout.addWidget(notes_group)
+        
+        # Difficulty rating
+        layout.addWidget(QLabel("Difficulty (1=Easy, 5=Hard):"))
+        difficulty_layout = QHBoxLayout()
+        for i in range(1, 6):
+            btn = QPushButton(str(i))
+            btn.setFixedSize(40, 40)
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #e0e0e0;
+                    border-radius: 20px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #d0d0d0;
+                }
+                QPushButton:checked {
+                    background-color: #3498db;
+                    color: white;
+                }
+            """)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked, idx=i: self.select_difficulty(idx))
+            self.difficulty_buttons.append(btn)
+            difficulty_layout.addWidget(btn)
+        self.difficulty_buttons[self.card.difficulty-1].setChecked(True)
+        layout.addLayout(difficulty_layout)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        self.save_btn = QPushButton("Save Changes")
+        self.save_btn.clicked.connect(self.accept)
+        
+        btn_layout.addWidget(self.cancel_btn)
+        btn_layout.addWidget(self.save_btn)
+        layout.addLayout(btn_layout)
+        
+        self.setLayout(layout)
+    
+    def insert_image(self, text_edit):
+        """Insert image into the specified text edit"""
+        image = ImageHandler.load_image_from_file(self)
+        if image:
+            # Resize dialog
+            dialog = ImageResizeDialog(image.width(), image.height(), self)
+            if dialog.exec():
+                new_width, new_height = dialog.get_new_size()
+                resized_image = ImageHandler.resize_image(image, new_width, new_height)
+                
+                # Convert to base64 for storage
+                base64_str = ImageHandler.image_to_base64(resized_image)
+                
+                # Insert into text edit
+                cursor = text_edit.textCursor()
+                cursor.insertHtml(f'<img src="data:image/png;base64,{base64_str}">')
+                text_edit.setTextCursor(cursor)
+
+    def select_difficulty(self, difficulty):
+        self.selected_difficulty = difficulty
+        for btn in self.difficulty_buttons:
+            btn.setChecked(False)
+        self.difficulty_buttons[difficulty-1].setChecked(True)
+    
+    def get_card_data(self):
+        return {
+            "front": self.front_text.toHtml(),
+            "back": self.back_text.toHtml(),
+            "notes": self.notes_text.toHtml(),
+            "difficulty": self.selected_difficulty
+        }
+
+
 # Card Manager Window
 class ManageCardsDialog(QDialog):
     def __init__(self, deck, parent=None):
