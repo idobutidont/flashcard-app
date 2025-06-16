@@ -38,14 +38,12 @@ class UserManager:
     
     def register_user(self, username, password):
         """Register a new user"""
-        # Validate username - must be at least 5 characters for compatibility with login.py
         if len(username) < 5:
             return False, "Username must be at least 5 characters long"
         
         if username in self.users:
             return False, "Username already exists"
         
-        # Validate password - complex validation for compatibility with login.py
         if len(password) < 8:
             return False, "Password must be at least 8 characters long"
         
@@ -827,8 +825,22 @@ class UserProfileDialog(QDialog):
             QMessageBox.warning(self, "Error", "New passwords do not match.")
             return
         
-        if len(new_pass) < 6:
-            QMessageBox.warning(self, "Error", "New password must be at least 6 characters long.")
+        if len(new_pass) < 8:
+            QMessageBox.warning(self, "Error", "New password must be at least 8 characters long.")
+            return
+        
+        if ' ' in new_pass:
+            QMessageBox.warning(self, "Error", "Password cannot contain spaces.")
+            return
+        
+        has_upper = any(c.isupper() for c in new_pass)
+        has_lower = any(c.islower() for c in new_pass)
+        has_digit = any(c.isdigit() for c in new_pass)
+        has_special = any(c in "!@#$%^&*()-_=+[]{};:',.<>?/\\|`~" for c in new_pass)
+        
+        if not (has_upper and has_lower and has_digit and has_special):
+            QMessageBox.warning(self, "Error", 
+                "Password must contain at least one uppercase letter, lowercase letter, digit, and special character.")
             return
         
         # Verify current password
